@@ -1,91 +1,75 @@
-# Lista di Casa — V1
+# Lista di Casa — V3
 
-Application PWA mobile partagée pour iPhone + Android.
+Application PWA partagée iPhone + Android avec Supabase.
 
-## Design V2 — style du mockup
+## Nouveautés V3
 
-Cette version reprend directement dans le vrai code le style du mockup validé : en-tête centré, synchronisation visible, accueil avec deux cartes Courses/Maison, panneau jaune des urgences, derniers ajouts, filtres en pastilles et listes compactes. Aucun de ces éléments n'est une image : ce sont les composants HTML/CSS/JS de l'application.
+- Interface complète **FR / UK**, avec petit sélecteur `FR / UK` en haut à droite.
+- Le choix de langue reste mémorisé sur chaque téléphone.
+- Zoom/pinch désactivé dans l'app.
+- Courses : option **Urgent** à l'ajout et à la modification.
+- Courses : menu `⋮` sur chaque article avec **Modifier**, **Enregistrer pour plus tard** et **Supprimer**.
+- Nouvel onglet **Plus tard / Later** dans Courses.
+- Mémoire des anciens articles : quand on touche ou commence à taper dans “Ajouter un article”, les articles déjà utilisés sont proposés automatiquement avec leur dernière quantité et leur dernier statut urgent.
+- Cette mémoire reste disponible même après avoir effacé les articles achetés.
+- Quand un article est coché comme acheté, le ✓ reste visible **2 secondes** avant que l'article passe dans l'onglet Achetés / Bought.
+- Pendant ces 2 secondes, retoucher la coche annule l'action.
+- Synchronisation Supabase temps réel conservée entre Silvère et Deborah.
 
-## Inclus dans cette V1
+## IMPORTANT — mise à jour de la base Supabase existante
 
-- Connexion par email / mot de passe.
-- Un espace privé partagé "Notre maison".
-- Code à 8 caractères pour inviter la deuxième personne.
-- Liste Courses : ajout, quantité, acheté / non acheté, suppression.
-- Liste Maison : tâche, urgent / non urgent, responsable, à faire / fait, modification, suppression.
-- Accueil avec compteurs.
-- Synchronisation temps réel entre les deux téléphones avec Supabase Realtime.
-- Installation PWA sur iPhone et Android.
-- Palette lavande / vert / jaune.
-- Row Level Security : les données d'une maison ne sont accessibles qu'à ses membres.
+Avant de publier le nouveau code sur GitHub Pages :
 
-## 1. Créer le projet Supabase
+1. Ouvrir **Supabase > SQL Editor**.
+2. Créer une nouvelle query.
+3. Copier tout le contenu du fichier `supabase-migration-v3.sql`.
+4. Cliquer sur **Run**.
+5. Vérifier que Supabase affiche `Success`.
 
-1. Va sur https://supabase.com/
-2. Crée un projet.
-3. Ouvre **SQL Editor**.
-4. Copie tout le contenu de `supabase-schema.sql`.
-5. Exécute le script.
+Cette migration est conçue pour conserver les données déjà présentes. Elle ajoute :
 
-## 2. Récupérer les deux informations de connexion
+- `is_urgent` aux articles de courses ;
+- `saved_for_later` aux articles de courses ;
+- la table `shopping_history` qui mémorise les articles déjà utilisés ;
+- les règles de sécurité RLS nécessaires ;
+- la synchronisation de cette mémoire entre les deux téléphones.
 
-Dans Supabase, ouvre **Connect** ou les paramètres API du projet.
+Le fichier `supabase-schema.sql` reste le schéma complet pour une installation neuve. Sur le projet Supabase actuel, utiliser seulement `supabase-migration-v3.sql`.
 
-Tu as besoin de :
-- Project URL
-- Publishable key
+## Mettre la V3 sur GitHub Pages
 
-Ne mets JAMAIS la `service_role` key dans cette app.
+Le `config.js` de ce package est déjà connecté au projet Supabase Lista di Casa.
 
-Ouvre `config.js` et remplace :
+Dans le repository GitHub `Lista-Di-Casa`, remplacer les fichiers existants avec ceux de ce dossier. Les fichiers importants modifiés sont :
 
-PASTE_YOUR_SUPABASE_URL_HERE
-PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE
+- `index.html`
+- `style.css`
+- `app.js`
+- `service-worker.js`
+- `supabase-schema.sql`
 
-par les deux valeurs de ton projet.
+Ajouter aussi :
 
-## 3. Email de confirmation
+- `supabase-migration-v3.sql`
 
-Par défaut, Supabase peut demander de confirmer l'adresse email.
+Une fois le commit terminé, GitHub Pages redéploie automatiquement la branche `main`.
 
-Pour un test très simple à deux, tu peux soit :
-- garder la confirmation email et cliquer le lien reçu après inscription ;
-- ou modifier les réglages Auth de ton projet si tu préfères un flux différent.
+## Utilisation de la mémoire des courses
 
-## 4. Tester avant de publier
+Touchez le champ **Ajouter un article**. Les derniers articles déjà utilisés apparaissent. En tapant quelques lettres, la liste se filtre. Toucher une suggestion remet son nom, sa dernière quantité et son dernier réglage Urgent dans le formulaire.
 
-Tu peux ouvrir le dossier avec un petit serveur local. Évite de simplement double-cliquer sur `index.html`, car les Service Workers et certains comportements PWA nécessitent HTTP/HTTPS.
+L'historique est partagé au niveau de **Notre maison**, donc les articles ajoutés par Silvère peuvent également être proposés à Deborah, et inversement.
 
-## 5. GitHub + Netlify
-
-Mets tout le contenu de ce dossier dans un nouveau dépôt GitHub, par exemple `lista-di-casa`.
-
-Puis connecte ce dépôt à Netlify. Aucun build n'est nécessaire :
-- Build command : vide
-- Publish directory : `.`
-
-## 6. Première utilisation
-
-1. Silvère crée son compte.
-2. Il crée "Notre maison".
-3. Dans l'accueil, toucher le bouton `i`.
-4. Copier le code à 8 caractères.
-5. Deborah crée son compte sur son téléphone.
-6. Elle choisit **Rejoindre** et saisit le code.
-7. Les deux téléphones voient ensuite les mêmes listes en temps réel.
-
-## 7. Installation sur téléphone
+## Installation téléphone
 
 ### iPhone
-Safari > bouton Partager > **Sur l'écran d'accueil**.
+Safari > Partager > **Sur l'écran d'accueil**.
 
 ### Android
-Chrome > menu > **Installer l'application** ou **Ajouter à l'écran d'accueil**.
+Chrome > menu ⋮ > **Installer l'application** ou **Ajouter à l'écran d'accueil**.
 
-## Notes techniques
+## Fichiers
 
-Frontend : HTML / CSS / JavaScript vanilla.
-Backend : Supabase Auth + Postgres + Realtime. Les changements de listes déclenchent un petit événement de synchro par maison, afin que même les suppressions soient immédiatement répercutées sur l’autre téléphone.
-PWA : manifest + Service Worker.
-
-Le Service Worker met en cache l'interface. Les modifications de données nécessitent actuellement une connexion internet ; une file d'attente de modifications hors-ligne pourra être ajoutée dans une V2.
+- Frontend : HTML / CSS / JavaScript vanilla.
+- Backend : Supabase Auth + Postgres + Realtime.
+- PWA : manifest + Service Worker.

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#F8F7FF" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -17,32 +17,37 @@
 
   <main class="shell">
     <section id="authView" class="auth-view">
+      <div class="top-corner-language language-switch" aria-label="Language">
+        <button type="button" data-lang="fr" class="active">FR</button>
+        <button type="button" data-lang="uk">UK</button>
+      </div>
+
       <div class="brand-block">
         <div class="brand-logo-large" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
         </div>
-        <p class="eyebrow">À deux, simplement.</p>
+        <p class="eyebrow" data-i18n="auth.tagline">À deux, simplement.</p>
         <h1>Lista di Casa</h1>
-        <p class="subtitle">Courses et petites choses de la maison, toujours synchronisées.</p>
+        <p class="subtitle" data-i18n="auth.subtitle">Courses et petites choses de la maison, toujours synchronisées.</p>
       </div>
 
       <div class="card auth-card">
         <div class="segmented">
-          <button class="segment active" data-auth-tab="login">Connexion</button>
-          <button class="segment" data-auth-tab="signup">Créer un compte</button>
+          <button class="segment active" data-auth-tab="login" data-i18n="auth.loginTab">Connexion</button>
+          <button class="segment" data-auth-tab="signup" data-i18n="auth.signupTab">Créer un compte</button>
         </div>
 
         <form id="loginForm" class="form-stack">
-          <label>Email<input id="loginEmail" type="email" autocomplete="email" required /></label>
-          <label>Mot de passe<input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required /></label>
-          <button class="primary" type="submit">Se connecter</button>
+          <label><span data-i18n="common.email">Email</span><input id="loginEmail" type="email" autocomplete="email" required /></label>
+          <label><span data-i18n="common.password">Mot de passe</span><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required /></label>
+          <button class="primary" type="submit" data-i18n="auth.loginButton">Se connecter</button>
         </form>
 
         <form id="signupForm" class="form-stack hidden">
-          <label>Prénom<input id="signupName" type="text" autocomplete="name" placeholder="Silvère" required /></label>
-          <label>Email<input id="signupEmail" type="email" autocomplete="email" required /></label>
-          <label>Mot de passe<input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
-          <button class="primary" type="submit">Créer mon compte</button>
+          <label><span data-i18n="common.firstName">Prénom</span><input id="signupName" type="text" autocomplete="name" placeholder="Silvère" required /></label>
+          <label><span data-i18n="common.email">Email</span><input id="signupEmail" type="email" autocomplete="email" required /></label>
+          <label><span data-i18n="common.password">Mot de passe</span><input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
+          <button class="primary" type="submit" data-i18n="auth.createAccount">Créer mon compte</button>
         </form>
       </div>
     </section>
@@ -50,50 +55,62 @@
     <section id="onboardingView" class="onboarding-view hidden">
       <header class="simple-header">
         <div>
-          <p class="eyebrow">Bienvenue</p>
-          <h2>Votre maison</h2>
+          <p class="eyebrow" data-i18n="onboarding.welcome">Bienvenue</p>
+          <h2 data-i18n="onboarding.title">Votre maison</h2>
         </div>
-        <button id="logoutOnboarding" class="icon-button" aria-label="Se déconnecter">↗</button>
+        <div class="header-utility-group">
+          <div class="language-switch" aria-label="Language">
+            <button type="button" data-lang="fr" class="active">FR</button>
+            <button type="button" data-lang="uk">UK</button>
+          </div>
+          <button id="logoutOnboarding" class="icon-button" data-i18n-aria="common.logout" aria-label="Se déconnecter">↗</button>
+        </div>
       </header>
 
       <div class="welcome-card lavender">
-        <h3>Créez votre espace partagé</h3>
-        <p>La première personne crée la maison. La seconde la rejoint avec le code généré.</p>
+        <h3 data-i18n="onboarding.createShared">Créez votre espace partagé</h3>
+        <p data-i18n="onboarding.description">La première personne crée la maison. La seconde la rejoint avec le code généré.</p>
       </div>
 
       <div class="card form-stack">
-        <h3>Créer</h3>
-        <label>Nom de l’espace<input id="householdName" type="text" value="Notre maison" maxlength="40" /></label>
-        <button id="createHouseholdBtn" class="primary">Créer notre maison</button>
+        <h3 data-i18n="common.create">Créer</h3>
+        <label><span data-i18n="onboarding.spaceName">Nom de l’espace</span><input id="householdName" type="text" value="Notre maison" maxlength="40" /></label>
+        <button id="createHouseholdBtn" class="primary" data-i18n="onboarding.createHome">Créer notre maison</button>
       </div>
 
-      <div class="or-divider"><span>ou</span></div>
+      <div class="or-divider"><span data-i18n="common.or">ou</span></div>
 
       <div class="card form-stack">
-        <h3>Rejoindre</h3>
-        <label>Code partagé<input id="joinCode" type="text" placeholder="Ex. A1B2C3D4" maxlength="12" autocapitalize="characters" /></label>
-        <button id="joinHouseholdBtn" class="secondary">Rejoindre la maison</button>
+        <h3 data-i18n="common.join">Rejoindre</h3>
+        <label><span data-i18n="onboarding.sharedCode">Code partagé</span><input id="joinCode" type="text" placeholder="Ex. A1B2C3D4" maxlength="12" autocapitalize="characters" /></label>
+        <button id="joinHouseholdBtn" class="secondary" data-i18n="onboarding.joinHome">Rejoindre la maison</button>
       </div>
     </section>
 
     <section id="appView" class="app-view hidden">
       <header class="app-header">
-        <button class="header-side-button header-home-mark" data-page-jump="home" aria-label="Accueil">
+        <button class="header-side-button header-home-mark" data-page-jump="home" data-i18n-aria="nav.home" aria-label="Accueil">
           <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
         </button>
         <div class="header-center">
           <h2 id="pageTitle">Lista di Casa</h2>
-          <div class="sync-line"><span id="syncDot"></span><span id="syncText">Synchronisé</span></div>
+          <div class="sync-line"><span id="syncDot"></span><span id="syncText" data-i18n="sync.synced">Synchronisé</span></div>
         </div>
-        <button id="openHouseholdInfo" class="header-side-button" aria-label="Maison et membres">
-          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.4A4.6 4.6 0 0 1 8.1 14h1.8a4.6 4.6 0 0 1 4.6 4.6V20"/><path d="M17 7v6M14 10h6"/></svg>
-        </button>
+        <div class="app-header-actions">
+          <div class="language-switch compact" aria-label="Language">
+            <button type="button" data-lang="fr" class="active">FR</button>
+            <button type="button" data-lang="uk">UK</button>
+          </div>
+          <button id="openHouseholdInfo" class="header-side-button" data-i18n-aria="share.members" aria-label="Maison et membres">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.4A4.6 4.6 0 0 1 8.1 14h1.8a4.6 4.6 0 0 1 4.6 4.6V20"/><path d="M17 7v6M14 10h6"/></svg>
+          </button>
+        </div>
       </header>
 
       <div id="homePage" class="page active">
         <section class="home-welcome">
           <h3 id="greeting">Bonjour !</h3>
-          <p>Tout est sous contrôle <span class="leaf-mark">◆</span></p>
+          <p><span data-i18n="home.underControl">Tout est sous contrôle</span> <span class="leaf-mark">◆</span></p>
         </section>
 
         <div class="home-main-cards">
@@ -102,8 +119,8 @@
               <svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg>
             </span>
             <strong id="shoppingRemaining">0</strong>
-            <small>articles à acheter</small>
-            <span class="card-link lavender-link">Courses <b>›</b></span>
+            <small data-i18n="home.itemsToBuy">articles à acheter</small>
+            <span class="card-link lavender-link"><span data-i18n="nav.shopping">Courses</span> <b>›</b></span>
           </button>
 
           <button class="home-main-card house-card" data-go="house">
@@ -111,8 +128,8 @@
               <svg viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></svg>
             </span>
             <strong id="tasksRemaining">0</strong>
-            <small>tâches à faire</small>
-            <span class="card-link green-link">Maison <b>›</b></span>
+            <small data-i18n="home.tasksToDo">tâches à faire</small>
+            <span class="card-link green-link"><span data-i18n="nav.house">Maison</span> <b>›</b></span>
           </button>
         </div>
 
@@ -121,52 +138,57 @@
             <span class="urgent-house-icon">
               <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
             </span>
-            <strong><span id="urgentRemaining">0</span> tâches urgentes</strong>
+            <strong><span id="urgentRemaining">0</span> <span data-i18n="home.urgentTasks">tâches urgentes</span></strong>
           </div>
           <div id="priorityList" class="priority-list empty-state compact-empty">Rien d’urgent pour le moment.</div>
         </section>
 
         <section class="recent-section">
           <div class="section-heading-inline">
-            <h3>Derniers ajouts</h3>
-            <button class="text-button" data-go="shopping">Voir tout</button>
+            <h3 data-i18n="home.recent">Derniers ajouts</h3>
+            <button class="text-button" data-go="shopping" data-i18n="common.viewAll">Voir tout</button>
           </div>
           <div id="recentList" class="recent-list empty-state compact-empty">Aucun ajout pour le moment.</div>
         </section>
       </div>
 
       <div id="shoppingPage" class="page">
-        <div class="composer shopping-composer">
-          <input id="shoppingName" type="text" placeholder="Ajouter un article…" maxlength="100" />
-          <input id="shoppingQty" class="qty-input" type="text" placeholder="1" maxlength="20" />
-          <button id="addShoppingBtn" class="add-button" aria-label="Ajouter">+</button>
+        <div class="shopping-add-area">
+          <div class="composer shopping-composer">
+            <input id="shoppingName" type="text" data-i18n-placeholder="shopping.addPlaceholder" placeholder="Ajouter un article…" maxlength="100" autocomplete="off" />
+            <input id="shoppingQty" class="qty-input" type="text" data-i18n-placeholder="shopping.qtyShort" placeholder="Qté" maxlength="20" />
+            <button id="shoppingUrgentBtn" class="shopping-urgent-button" type="button" aria-pressed="false" data-i18n-title="common.urgent" title="Urgent">!</button>
+            <button id="addShoppingBtn" class="add-button" data-i18n-aria="common.add" aria-label="Ajouter">+</button>
+          </div>
+          <div id="shoppingSuggestions" class="shopping-suggestions hidden"></div>
         </div>
 
-        <div class="filter-row three-cols" id="shoppingFilters">
-          <button class="chip active" data-shopping-filter="all">Toutes</button>
-          <button class="chip" data-shopping-filter="todo">À acheter <span id="shoppingTodoCount">0</span></button>
-          <button class="chip" data-shopping-filter="done">Achetés <span id="shoppingDoneCount">0</span></button>
+        <div class="filter-row four-cols" id="shoppingFilters">
+          <button class="chip active" data-shopping-filter="all"><span data-i18n="common.all">Toutes</span></button>
+          <button class="chip" data-shopping-filter="todo"><span data-i18n="shopping.toBuy">À acheter</span> <span id="shoppingTodoCount">0</span></button>
+          <button class="chip" data-shopping-filter="later"><span data-i18n="shopping.later">Plus tard</span> <span id="shoppingLaterCount">0</span></button>
+          <button class="chip" data-shopping-filter="done"><span data-i18n="shopping.bought">Achetés</span> <span id="shoppingDoneCount">0</span></button>
         </div>
 
         <div id="shoppingList" class="item-list mock-list"></div>
 
         <button id="clearBoughtBtn" class="clear-bought-button">
           <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg>
-          Effacer les articles achetés
+          <span data-i18n="shopping.clearBought">Effacer les articles achetés</span>
         </button>
         <div id="shoppingCounter" class="sr-only">0 à acheter</div>
       </div>
 
       <div id="housePage" class="page">
         <button id="openTaskComposer" class="task-composer-row">
-          <span>Ajouter une tâche…</span>
+          <span data-i18n="house.addTask">Ajouter une tâche…</span>
           <b>+</b>
         </button>
 
         <div class="filter-row three-cols" id="taskFilters">
-          <button class="chip" data-filter="all">Toutes</button>
-          <button class="chip active" data-filter="todo">À faire</button>
-          <button class="chip" data-filter="done">Faites</button>
+          <button class="chip" data-filter="all" data-i18n="common.all">Toutes</button>
+          <button class="chip active" data-filter="todo" data-i18n="house.toDo">À faire</button>
+          <button class="chip" data-filter="done" data-i18n="house.done">Faites</button>
         </div>
 
         <div id="taskList" class="item-list mock-list task-mock-list"></div>
@@ -174,13 +196,13 @@
 
       <nav class="bottom-nav">
         <button class="nav-button active" data-page="home">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><small>Accueil</small>
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><small data-i18n="nav.home">Accueil</small>
         </button>
         <button class="nav-button" data-page="shopping">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg></span><small>Courses</small>
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg></span><small data-i18n="nav.shopping">Courses</small>
         </button>
         <button class="nav-button" data-page="house">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="m9 15 2 2 4-5"/></svg></span><small>Maison</small>
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="m9 15 2 2 4-5"/></svg></span><small data-i18n="nav.house">Maison</small>
         </button>
       </nav>
     </section>
@@ -192,17 +214,53 @@
       <div class="sheet-head"><h3 id="taskSheetTitle">Nouvelle tâche</h3><button id="closeTaskSheet" class="icon-button">×</button></div>
       <form id="taskForm" class="form-stack">
         <input id="taskId" type="hidden" />
-        <label>À faire<input id="taskTitle" type="text" placeholder="Ex. Changer l’ampoule" maxlength="120" required /></label>
-        <label>Pour qui ?
+        <label><span data-i18n="house.taskLabel">À faire</span><input id="taskTitle" type="text" data-i18n-placeholder="house.taskPlaceholder" placeholder="Ex. Changer l’ampoule" maxlength="120" required /></label>
+        <label><span data-i18n="house.assignee">Pour qui ?</span>
           <select id="taskAssignee"><option value="">N’importe qui</option></select>
         </label>
         <label class="toggle-line">
-          <div><strong>Urgent</strong><small>Mettre cette tâche en priorité</small></div>
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="house.urgentHelp">Mettre cette tâche en priorité</small></div>
           <input id="taskUrgent" type="checkbox" class="switch-input" />
           <span class="switch"></span>
         </label>
-        <button class="primary" type="submit">Enregistrer</button>
-        <button id="deleteTaskBtn" class="danger-link hidden" type="button">Supprimer cette tâche</button>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+        <button id="deleteTaskBtn" class="danger-link hidden" type="button" data-i18n="house.deleteTask">Supprimer cette tâche</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="shoppingActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="shopping.options">Options</p><h3 id="shoppingActionName">Article</h3></div><button id="closeShoppingActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="shoppingEditAction" class="sheet-action">
+          <span class="sheet-action-icon">✎</span><span data-i18n="common.edit">Modifier</span>
+        </button>
+        <button id="shoppingLaterAction" class="sheet-action">
+          <span class="sheet-action-icon">☆</span><span id="shoppingLaterActionText">Enregistrer pour plus tard</span>
+        </button>
+        <button id="shoppingDeleteAction" class="sheet-action danger-action">
+          <span class="sheet-action-icon">×</span><span data-i18n="common.delete">Supprimer</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="shoppingEditSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 data-i18n="shopping.editItem">Modifier l’article</h3><button id="closeShoppingEdit" class="icon-button">×</button></div>
+      <form id="shoppingEditForm" class="form-stack">
+        <input id="shoppingEditId" type="hidden" />
+        <label><span data-i18n="shopping.item">Article</span><input id="shoppingEditName" type="text" maxlength="100" required /></label>
+        <label><span data-i18n="shopping.quantity">Quantité</span><input id="shoppingEditQty" type="text" maxlength="20" /></label>
+        <label class="toggle-line">
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="shopping.urgentHelp">Mettre cet article en priorité</small></div>
+          <input id="shoppingEditUrgent" type="checkbox" class="switch-input" />
+          <span class="switch"></span>
+        </label>
+        <button class="primary" type="submit" data-i18n="common.saveChanges">Enregistrer les modifications</button>
       </form>
     </section>
   </div>
@@ -210,17 +268,17 @@
   <div id="shareSheet" class="sheet-backdrop hidden">
     <section class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-head"><h3>Votre maison</h3><button id="closeShareSheet" class="icon-button">×</button></div>
+      <div class="sheet-head"><h3 data-i18n="share.title">Votre maison</h3><button id="closeShareSheet" class="icon-button">×</button></div>
       <div class="share-code-card">
-        <p>Code à partager avec Deborah</p>
+        <p data-i18n="share.codeHelp">Code à partager avec Deborah</p>
         <strong id="householdCode">—</strong>
-        <button id="copyCodeBtn" class="secondary">Copier le code</button>
+        <button id="copyCodeBtn" class="secondary" data-i18n="share.copyCode">Copier le code</button>
       </div>
       <div class="member-box">
-        <p class="eyebrow">Membres</p>
+        <p class="eyebrow" data-i18n="share.membersLabel">Membres</p>
         <div id="membersList"></div>
       </div>
-      <button id="logoutBtn" class="danger-link">Se déconnecter</button>
+      <button id="logoutBtn" class="danger-link" data-i18n="common.logout">Se déconnecter</button>
     </section>
   </div>
 

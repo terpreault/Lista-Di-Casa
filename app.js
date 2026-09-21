@@ -82,6 +82,22 @@
       "shopping.categories": "Catégories",
       "shopping.filterCategory": "Filtrer par catégorie",
       "shopping.allCategories": "Toutes les catégories",
+      "shopping.addCategory": "Ajouter une catégorie",
+      "category.options": "Options de catégorie",
+      "category.edit": "Modifier la catégorie",
+      "category.nameFr": "Nom français",
+      "category.nameUk": "Nom anglais (UK)",
+      "category.icon": "Icône",
+      "category.moveUp": "Monter",
+      "category.moveDown": "Descendre",
+      "category.delete": "Supprimer la catégorie",
+      "category.deleteConfirm": "Supprimer cette catégorie ? Les articles associés seront déplacés vers Autres.",
+      "category.fallbackProtected": "La catégorie Autres ne peut pas être supprimée.",
+      "category.created": "Catégorie ajoutée.",
+      "category.updated": "Catégorie modifiée.",
+      "category.deleted": "Catégorie supprimée.",
+      "category.expand": "Déplier la catégorie",
+      "category.collapse": "Réduire la catégorie",
       "category.fruit_veg": "Fruits & légumes",
       "category.bakery": "Boulangerie",
       "category.fresh": "Produits frais",
@@ -197,6 +213,22 @@
       "shopping.categories": "Categories",
       "shopping.filterCategory": "Filter by category",
       "shopping.allCategories": "All categories",
+      "shopping.addCategory": "Add a category",
+      "category.options": "Category options",
+      "category.edit": "Edit category",
+      "category.nameFr": "French name",
+      "category.nameUk": "UK English name",
+      "category.icon": "Icon",
+      "category.moveUp": "Move up",
+      "category.moveDown": "Move down",
+      "category.delete": "Delete category",
+      "category.deleteConfirm": "Delete this category? Its items will be moved to Other.",
+      "category.fallbackProtected": "The Other category cannot be deleted.",
+      "category.created": "Category added.",
+      "category.updated": "Category updated.",
+      "category.deleted": "Category deleted.",
+      "category.expand": "Expand category",
+      "category.collapse": "Collapse category",
       "category.fruit_veg": "Fruit & Veg",
       "category.bakery": "Bakery",
       "category.fresh": "Chilled & Dairy",
@@ -247,16 +279,16 @@
     }
   };
 
-  const SHOPPING_CATEGORIES = [
-    { key: "fruit_veg", emoji: "🥬" },
-    { key: "bakery", emoji: "🥖" },
-    { key: "fresh", emoji: "🥛" },
-    { key: "meat_fish", emoji: "🥩" },
-    { key: "pantry", emoji: "🥫" },
-    { key: "drinks", emoji: "🥤" },
-    { key: "frozen", emoji: "❄️" },
-    { key: "home", emoji: "🧽" },
-    { key: "other", emoji: "📦" }
+  const DEFAULT_CATEGORY_DEFS = [
+    { key: "fruit_veg", emoji: "🥬", name_fr: "Fruits & légumes", name_en: "Fruit & Veg", sort_order: 10, is_default: true, is_fallback: false },
+    { key: "bakery", emoji: "🥖", name_fr: "Boulangerie", name_en: "Bakery", sort_order: 20, is_default: true, is_fallback: false },
+    { key: "fresh", emoji: "🥛", name_fr: "Produits frais", name_en: "Chilled & Dairy", sort_order: 30, is_default: true, is_fallback: false },
+    { key: "meat_fish", emoji: "🥩", name_fr: "Viande & poisson", name_en: "Meat & Fish", sort_order: 40, is_default: true, is_fallback: false },
+    { key: "pantry", emoji: "🥫", name_fr: "Épicerie", name_en: "Pantry", sort_order: 50, is_default: true, is_fallback: false },
+    { key: "drinks", emoji: "🥤", name_fr: "Boissons", name_en: "Drinks", sort_order: 60, is_default: true, is_fallback: false },
+    { key: "frozen", emoji: "❄️", name_fr: "Surgelés", name_en: "Frozen", sort_order: 70, is_default: true, is_fallback: false },
+    { key: "home", emoji: "🧽", name_fr: "Maison", name_en: "Household", sort_order: 80, is_default: true, is_fallback: false },
+    { key: "other", emoji: "📦", name_fr: "Autres", name_en: "Other", sort_order: 90, is_default: true, is_fallback: true }
   ];
 
   let currentLang = localStorage.getItem("lista_lang") === "uk" ? "uk" : "fr";
@@ -267,6 +299,7 @@
   let members = [];
   let shopping = [];
   let shoppingHistory = [];
+  let shoppingCategories = [];
   let tasks = [];
   let taskFilter = "todo";
   let shoppingFilter = "all";
@@ -276,6 +309,8 @@
   let newShoppingUrgent = false;
   let newShoppingCategory = "other";
   let shoppingActionItemId = null;
+  let categoryActionKey = null;
+  let categoryEditorReturnTarget = null;
   const pendingPurchases = new Set();
   const pendingPurchaseTimers = new Map();
 
@@ -289,43 +324,91 @@
     return translations[currentLang]?.[key] ?? translations.fr[key] ?? key;
   }
 
+  function allShoppingCategories() {
+    const source = shoppingCategories.length
+      ? shoppingCategories.map(row => ({
+          ...row,
+          key: row.category_key || row.key,
+          sort_order: Number(row.sort_order ?? 999),
+          is_fallback: !!row.is_fallback
+        }))
+      : DEFAULT_CATEGORY_DEFS.map(category => ({ ...category }));
+    return source.sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999) || String(a.name_fr || a.key).localeCompare(String(b.name_fr || b.key)));
+  }
+
   function categoryMeta(key) {
-    return SHOPPING_CATEGORIES.find(category => category.key === key) || SHOPPING_CATEGORIES[SHOPPING_CATEGORIES.length - 1];
+    const categories = allShoppingCategories();
+    return categories.find(category => category.key === key)
+      || categories.find(category => category.is_fallback)
+      || DEFAULT_CATEGORY_DEFS[DEFAULT_CATEGORY_DEFS.length - 1];
   }
 
   function categoryLabel(key) {
     const meta = categoryMeta(key);
-    return t(`category.${meta.key}`);
+    const stored = currentLang === "uk" ? meta.name_en : meta.name_fr;
+    return stored || t(`category.${meta.key}`) || meta.key;
   }
 
   function categoryDisplay(key) {
     const meta = categoryMeta(key);
-    return `${meta.emoji} ${categoryLabel(meta.key)}`;
+    return `${meta.emoji || "📦"} ${categoryLabel(meta.key)}`;
   }
 
   function categoryRank(key) {
-    const index = SHOPPING_CATEGORIES.findIndex(category => category.key === key);
-    return index === -1 ? SHOPPING_CATEGORIES.length : index;
+    const index = allShoppingCategories().findIndex(category => category.key === key);
+    return index === -1 ? 999 : index;
   }
 
-  function fillCategorySelect(select, { includeAll = false, selected = null } = {}) {
+  function fallbackCategoryKey() {
+    return allShoppingCategories().find(category => category.is_fallback)?.key || "other";
+  }
+
+  function collapsedCategoriesStorageKey() {
+    return `lista_collapsed_categories_${household?.id || "local"}`;
+  }
+
+  function getCollapsedCategories() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(collapsedCategoriesStorageKey()) || "[]");
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function toggleCategoryCollapsed(key) {
+    const collapsed = getCollapsedCategories();
+    if (collapsed.has(key)) collapsed.delete(key);
+    else collapsed.add(key);
+    localStorage.setItem(collapsedCategoriesStorageKey(), JSON.stringify([...collapsed]));
+    renderShopping();
+  }
+
+  function fillCategorySelect(select, { includeAll = false, selected = null, allowAdd = true } = {}) {
     if (!select) return;
     const wanted = selected ?? select.value;
     const options = [];
     if (includeAll) options.push(`<option value="all">${esc(t("shopping.allCategories"))}</option>`);
-    options.push(...SHOPPING_CATEGORIES.map(category =>
-      `<option value="${category.key}">${category.emoji} ${esc(categoryLabel(category.key))}</option>`
+    options.push(...allShoppingCategories().map(category =>
+      `<option value="${esc(category.key)}">${esc(category.emoji || "📦")} ${esc(categoryLabel(category.key))}</option>`
     ));
+    if (allowAdd && !includeAll) {
+      options.push(`<option value="__add_category__">＋ ${esc(t("shopping.addCategory"))}</option>`);
+    }
     select.innerHTML = options.join("");
     if ([...select.options].some(option => option.value === wanted)) select.value = wanted;
-    else select.value = includeAll ? "all" : "other";
+    else select.value = includeAll ? "all" : fallbackCategoryKey();
   }
 
   function renderCategoryControls() {
-    fillCategorySelect($("shoppingCategory"), { selected: newShoppingCategory });
-    fillCategorySelect($("shoppingCategoryFilter"), { includeAll: true, selected: shoppingCategoryFilter });
+    fillCategorySelect($("shoppingCategory"), { selected: newShoppingCategory, allowAdd: true });
+    fillCategorySelect($("shoppingCategoryFilter"), { includeAll: true, selected: shoppingCategoryFilter, allowAdd: false });
     const editSelect = $("shoppingEditCategory");
-    if (editSelect && !editSelect.options.length) fillCategorySelect(editSelect, { selected: "other" });
+    if (editSelect) {
+      const wanted = editSelect.dataset.lastValue || editSelect.value || fallbackCategoryKey();
+      fillCategorySelect(editSelect, { selected: wanted, allowAdd: true });
+      editSelect.dataset.lastValue = editSelect.value;
+    }
   }
 
   function applyLanguage() {
@@ -462,6 +545,7 @@
       members = [];
       shopping = [];
       shoppingHistory = [];
+      shoppingCategories = [];
       tasks = [];
       setView("auth");
       return;
@@ -496,7 +580,7 @@
   async function loadAll() {
     if (!supabase || !household) return;
 
-    const [membersRes, shoppingRes, tasksRes, historyRes] = await Promise.all([
+    const [membersRes, shoppingRes, tasksRes, historyRes, categoriesRes] = await Promise.all([
       supabase
         .from("household_members")
         .select("user_id, profiles(id,display_name)")
@@ -516,11 +600,16 @@
         .select("*")
         .eq("household_id", household.id)
         .order("last_used_at", { ascending: false })
-        .limit(100)
+        .limit(100),
+      supabase
+        .from("shopping_categories")
+        .select("*")
+        .eq("household_id", household.id)
+        .order("sort_order", { ascending: true })
     ]);
 
-    if (membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error) {
-      console.error(membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error);
+    if (membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error) {
+      console.error(membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error);
       showToast(t("toast.syncError"));
       return;
     }
@@ -532,6 +621,7 @@
     shopping = shoppingRes.data || [];
     tasks = tasksRes.data || [];
     shoppingHistory = historyRes.data || [];
+    shoppingCategories = categoriesRes.data || [];
     renderAll();
   }
 
@@ -664,15 +754,21 @@
       `;
     };
 
+    const collapsed = getCollapsedCategories();
     host.innerHTML = [...groups.entries()].map(([key, items]) => {
       const meta = categoryMeta(key);
+      const isCollapsed = collapsed.has(key);
       return `
-        <section class="shopping-category-group">
+        <section class="shopping-category-group ${isCollapsed ? "collapsed" : ""}">
           <div class="shopping-category-header">
-            <div><span class="category-emoji">${meta.emoji}</span><strong>${esc(categoryLabel(key))}</strong></div>
-            <small>${items.length}</small>
+            <button type="button" class="shopping-category-toggle" data-category-toggle="${esc(key)}" aria-expanded="${isCollapsed ? "false" : "true"}" aria-label="${esc(isCollapsed ? t("category.expand") : t("category.collapse"))}">
+              <span class="category-title-wrap"><span class="category-emoji">${esc(meta.emoji || "📦")}</span><strong>${esc(categoryLabel(key))}</strong></span>
+              <span class="category-count">${items.length}</span>
+              <span class="category-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <button type="button" class="category-menu-button" data-category-menu="${esc(key)}" aria-label="${esc(t("category.options"))}">⋮</button>
           </div>
-          <div class="shopping-category-items">${items.map(renderItem).join("")}</div>
+          <div class="shopping-category-items ${isCollapsed ? "hidden" : ""}">${items.map(renderItem).join("")}</div>
         </section>
       `;
     }).join("");
@@ -819,6 +915,120 @@
     setTimeout(() => $("taskTitle").focus(), 100);
   }
 
+  function openCategoryActions(key) {
+    const category = categoryMeta(key);
+    categoryActionKey = category.key;
+    $("categoryActionName").textContent = categoryDisplay(category.key);
+
+    const ordered = allShoppingCategories();
+    const index = ordered.findIndex(row => row.key === category.key);
+    $("categoryMoveUpAction").disabled = index <= 0;
+    $("categoryMoveDownAction").disabled = index < 0 || index >= ordered.length - 1;
+    $("categoryDeleteAction").disabled = !!category.is_fallback;
+    $("categoryDeleteAction").classList.toggle("disabled-action", !!category.is_fallback);
+    $("categoryActionsSheet").classList.remove("hidden");
+  }
+
+  function openCategoryEditor(category = null, returnTarget = null) {
+    categoryEditorReturnTarget = returnTarget;
+    $("categoryEditForm").reset();
+    $("categoryEditId").value = category?.id || "";
+    $("categoryEditTitle").textContent = category ? t("category.edit") : t("shopping.addCategory");
+    $("categoryNameFr").value = category?.name_fr || "";
+    $("categoryNameUk").value = category?.name_en || "";
+    $("categoryEmoji").value = category?.emoji || "📦";
+    $("categoryActionsSheet").classList.add("hidden");
+    $("categoryEditSheet").classList.remove("hidden");
+    setTimeout(() => $("categoryNameFr").focus(), 100);
+  }
+
+  async function saveCategory(event) {
+    event.preventDefault();
+    const id = $("categoryEditId").value;
+    const nameFr = $("categoryNameFr").value.trim();
+    const nameUk = $("categoryNameUk").value.trim();
+    const emoji = $("categoryEmoji").value.trim() || "📦";
+    if (!nameFr || !nameUk) return;
+
+    let result;
+    if (id) {
+      result = await supabase
+        .from("shopping_categories")
+        .update({ name_fr: nameFr, name_en: nameUk, emoji, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+    } else {
+      const maxOrder = allShoppingCategories().reduce((max, row) => Math.max(max, Number(row.sort_order || 0)), 0);
+      result = await supabase
+        .from("shopping_categories")
+        .insert({
+          household_id: household.id,
+          name_fr: nameFr,
+          name_en: nameUk,
+          emoji,
+          sort_order: maxOrder + 10,
+          created_by: user.id
+        })
+        .select()
+        .single();
+    }
+
+    if (result.error) return showToast(t("toast.updateError"));
+    const createdKey = result.data?.category_key;
+    const target = categoryEditorReturnTarget;
+    categoryEditorReturnTarget = null;
+    closeSheets();
+    await loadAll();
+
+    if (!id && createdKey && target === "new") {
+      newShoppingCategory = createdKey;
+      renderCategoryControls();
+    } else if (!id && createdKey && target === "edit") {
+      fillCategorySelect($("shoppingEditCategory"), { selected: createdKey, allowAdd: true });
+      $("shoppingEditCategory").value = createdKey;
+      $("shoppingEditCategory").dataset.lastValue = createdKey;
+      $("shoppingEditSheet").classList.remove("hidden");
+    }
+
+    showToast(t(id ? "category.updated" : "category.created"));
+  }
+
+  async function moveCategory(direction) {
+    const ordered = allShoppingCategories();
+    const index = ordered.findIndex(row => row.key === categoryActionKey);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
+    const current = ordered[index];
+    const target = ordered[targetIndex];
+
+    const currentOrder = Number(current.sort_order || index * 10 + 10);
+    const targetOrder = Number(target.sort_order || targetIndex * 10 + 10);
+    const first = await supabase.from("shopping_categories").update({ sort_order: targetOrder, updated_at: new Date().toISOString() }).eq("id", current.id);
+    if (first.error) return showToast(t("toast.updateError"));
+    const second = await supabase.from("shopping_categories").update({ sort_order: currentOrder, updated_at: new Date().toISOString() }).eq("id", target.id);
+    if (second.error) return showToast(t("toast.updateError"));
+    closeSheets();
+    await loadAll();
+  }
+
+  async function deleteCategory() {
+    const category = categoryMeta(categoryActionKey);
+    if (!category?.id) return;
+    if (category.is_fallback) return showToast(t("category.fallbackProtected"));
+    if (!window.confirm(t("category.deleteConfirm"))) return;
+
+    const { error } = await supabase.rpc("delete_shopping_category", { category_id: category.id });
+    if (error) return showToast(t("toast.deleteError"));
+
+    if (newShoppingCategory === category.key) newShoppingCategory = fallbackCategoryKey();
+    if (shoppingCategoryFilter === category.key) shoppingCategoryFilter = "all";
+    categoryActionKey = null;
+    closeSheets();
+    await loadAll();
+    showToast(t("category.deleted"));
+  }
+
   function openShoppingActions(item) {
     if (!item) return;
     shoppingActionItemId = item.id;
@@ -841,7 +1051,8 @@
     $("shoppingEditId").value = item.id;
     $("shoppingEditName").value = item.name || "";
     $("shoppingEditQty").value = item.quantity || "";
-    fillCategorySelect($("shoppingEditCategory"), { selected: item.category || "other" });
+    fillCategorySelect($("shoppingEditCategory"), { selected: item.category || fallbackCategoryKey(), allowAdd: true });
+    $("shoppingEditCategory").dataset.lastValue = item.category || fallbackCategoryKey();
     $("shoppingEditUrgent").checked = !!item.is_urgent;
     $("shoppingActionsSheet").classList.add("hidden");
     $("shoppingEditSheet").classList.remove("hidden");
@@ -852,6 +1063,8 @@
     $("taskSheet").classList.add("hidden");
     $("shoppingActionsSheet").classList.add("hidden");
     $("shoppingEditSheet").classList.add("hidden");
+    $("categoryActionsSheet").classList.add("hidden");
+    $("categoryEditSheet").classList.add("hidden");
     $("shareSheet").classList.add("hidden");
   }
 
@@ -902,7 +1115,7 @@
           <small>${esc(t("shopping.historyHint"))}${item.last_quantity ? ` · ${esc(item.last_quantity)}` : ""}</small>
         </span>
         <span class="suggestion-badges">
-          <span class="badge category">${categoryMeta(item.last_category || "other").emoji} ${esc(categoryLabel(item.last_category || "other"))}</span>
+          <span class="badge category">${categoryMeta(item.last_category || fallbackCategoryKey()).emoji} ${esc(categoryLabel(item.last_category || fallbackCategoryKey()))}</span>
           ${item.last_urgent ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
         </span>
       </button>
@@ -915,7 +1128,7 @@
     if (!historyItem) return;
     $("shoppingName").value = historyItem.display_name || "";
     $("shoppingQty").value = historyItem.last_quantity || "";
-    newShoppingCategory = categoryMeta(historyItem.last_category || "other").key;
+    newShoppingCategory = categoryMeta(historyItem.last_category || fallbackCategoryKey()).key;
     renderCategoryControls();
     setNewShoppingUrgent(!!historyItem.last_urgent);
     $("shoppingSuggestions").classList.add("hidden");
@@ -932,7 +1145,7 @@
       display_name: name.trim(),
       last_quantity: quantity?.trim() || null,
       last_urgent: !!urgent,
-      last_category: categoryMeta(category || "other").key,
+      last_category: categoryMeta(category || fallbackCategoryKey()).key,
       use_count: (existing?.use_count || 0) + 1,
       last_used_at: new Date().toISOString()
     };
@@ -946,7 +1159,8 @@
   async function addShopping() {
     const name = $("shoppingName").value.trim();
     const quantity = $("shoppingQty").value.trim();
-    const category = categoryMeta($("shoppingCategory").value || newShoppingCategory).key;
+    const selectedCategory = $("shoppingCategory").value;
+    const category = categoryMeta(selectedCategory === "__add_category__" ? newShoppingCategory : selectedCategory || newShoppingCategory).key;
     if (!name) return;
 
     const { error } = await supabase.from("shopping_items").insert({
@@ -964,7 +1178,7 @@
     await rememberShoppingItem(name, quantity, newShoppingUrgent, category);
     $("shoppingName").value = "";
     $("shoppingQty").value = "";
-    newShoppingCategory = "other";
+    newShoppingCategory = fallbackCategoryKey();
     renderCategoryControls();
     setNewShoppingUrgent(false);
     $("shoppingSuggestions").classList.add("hidden");
@@ -1066,7 +1280,8 @@
     const id = $("shoppingEditId").value;
     const name = $("shoppingEditName").value.trim();
     const quantity = $("shoppingEditQty").value.trim();
-    const category = categoryMeta($("shoppingEditCategory").value || "other").key;
+    const categoryValue = $("shoppingEditCategory").value;
+    const category = categoryMeta(categoryValue === "__add_category__" ? $("shoppingEditCategory").dataset.lastValue : categoryValue || fallbackCategoryKey()).key;
     const isUrgent = $("shoppingEditUrgent").checked;
     if (!id || !name) return;
 
@@ -1236,6 +1451,11 @@
 
     $("shoppingUrgentBtn").addEventListener("click", () => setNewShoppingUrgent(!newShoppingUrgent));
     $("shoppingCategory").addEventListener("change", event => {
+      if (event.target.value === "__add_category__") {
+        fillCategorySelect(event.target, { selected: newShoppingCategory, allowAdd: true });
+        openCategoryEditor(null, "new");
+        return;
+      }
       newShoppingCategory = categoryMeta(event.target.value).key;
     });
     $("shoppingCategoryFilter").addEventListener("change", event => {
@@ -1262,8 +1482,12 @@
     $("shoppingList").addEventListener("click", event => {
       const toggle = event.target.closest("[data-shopping-toggle]");
       const menu = event.target.closest("[data-shopping-menu]");
+      const categoryToggle = event.target.closest("[data-category-toggle]");
+      const categoryMenu = event.target.closest("[data-category-menu]");
       if (toggle) toggleShopping(toggle.dataset.shoppingToggle);
       if (menu) openShoppingActions(shopping.find(item => item.id === menu.dataset.shoppingMenu));
+      if (categoryToggle) toggleCategoryCollapsed(categoryToggle.dataset.categoryToggle);
+      if (categoryMenu) openCategoryActions(categoryMenu.dataset.categoryMenu);
     });
 
     $("closeShoppingActions").addEventListener("click", closeSheets);
@@ -1273,8 +1497,27 @@
     $("shoppingDeleteAction").addEventListener("click", () => deleteShopping(shoppingActionItemId));
 
     $("shoppingEditForm").addEventListener("submit", saveShoppingEdit);
+    $("shoppingEditCategory").addEventListener("change", event => {
+      if (event.target.value === "__add_category__") {
+        const previous = event.target.dataset.lastValue || fallbackCategoryKey();
+        fillCategorySelect(event.target, { selected: previous, allowAdd: true });
+        openCategoryEditor(null, "edit");
+        return;
+      }
+      event.target.dataset.lastValue = event.target.value;
+    });
     $("closeShoppingEdit").addEventListener("click", closeSheets);
     $("shoppingEditSheet").addEventListener("click", event => { if (event.target === $("shoppingEditSheet")) closeSheets(); });
+
+    $("closeCategoryActions").addEventListener("click", closeSheets);
+    $("categoryActionsSheet").addEventListener("click", event => { if (event.target === $("categoryActionsSheet")) closeSheets(); });
+    $("categoryEditAction").addEventListener("click", () => openCategoryEditor(categoryMeta(categoryActionKey)));
+    $("categoryMoveUpAction").addEventListener("click", () => moveCategory(-1));
+    $("categoryMoveDownAction").addEventListener("click", () => moveCategory(1));
+    $("categoryDeleteAction").addEventListener("click", deleteCategory);
+    $("categoryEditForm").addEventListener("submit", saveCategory);
+    $("closeCategoryEdit").addEventListener("click", closeSheets);
+    $("categoryEditSheet").addEventListener("click", event => { if (event.target === $("categoryEditSheet")) closeSheets(); });
 
     $("priorityList").addEventListener("click", event => {
       const toggle = event.target.closest("[data-task-toggle]");

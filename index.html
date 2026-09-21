@@ -277,6 +277,41 @@
     </section>
   </div>
 
+  <div id="categoryActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="category.options">Options de catégorie</p><h3 id="categoryActionName">Catégorie</h3></div><button id="closeCategoryActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="categoryEditAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">✎</span><span data-i18n="category.edit">Modifier la catégorie</span>
+        </button>
+        <button id="categoryMoveUpAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">↑</span><span data-i18n="category.moveUp">Monter</span>
+        </button>
+        <button id="categoryMoveDownAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">↓</span><span data-i18n="category.moveDown">Descendre</span>
+        </button>
+        <button id="categoryDeleteAction" class="sheet-action danger-action" type="button">
+          <span class="sheet-action-icon">×</span><span data-i18n="category.delete">Supprimer la catégorie</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="categoryEditSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 id="categoryEditTitle" data-i18n="shopping.addCategory">Ajouter une catégorie</h3><button id="closeCategoryEdit" class="icon-button">×</button></div>
+      <form id="categoryEditForm" class="form-stack">
+        <input id="categoryEditId" type="hidden" />
+        <label><span data-i18n="category.nameFr">Nom français</span><input id="categoryNameFr" type="text" maxlength="40" required /></label>
+        <label><span data-i18n="category.nameUk">Nom anglais (UK)</span><input id="categoryNameUk" type="text" maxlength="40" required /></label>
+        <label><span data-i18n="category.icon">Icône</span><input id="categoryEmoji" class="emoji-input" type="text" maxlength="16" inputmode="text" placeholder="📦" /></label>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+      </form>
+    </section>
+  </div>
+
   <div id="shareSheet" class="sheet-backdrop hidden">
     <section class="sheet">
       <div class="sheet-handle"></div>

@@ -55,7 +55,7 @@
       "home.underControl": "Tout est sous contrôle",
       "home.itemsToBuy": "articles à acheter",
       "home.tasksToDo": "tâches à faire",
-      "home.urgentTasks": "tâches urgentes",
+      "home.urgentTasks": "priorités urgentes",
       "home.recent": "Derniers ajouts",
       "home.noUrgent": "Rien d’urgent pour le moment.",
       "home.noRecent": "Aucun ajout pour le moment.",
@@ -118,6 +118,38 @@
       "house.newTask": "Nouvelle tâche",
       "house.editTask": "Modifier la tâche",
       "house.empty": "Aucune tâche dans cette vue.",
+      "house.tasksTab": "À faire",
+      "house.purchasesTab": "À acheter",
+      "purchase.add": "Ajouter un achat…",
+      "purchase.new": "Nouvel achat",
+      "purchase.edit": "Modifier l’achat",
+      "purchase.item": "Article",
+      "purchase.placeholder": "Ex. Lampe de bureau",
+      "purchase.price": "Prix estimé",
+      "purchase.status": "Statut",
+      "purchase.toBuy": "À acheter",
+      "purchase.later": "Plus tard",
+      "purchase.bought": "Achetés",
+      "purchase.note": "Note",
+      "purchase.notePlaceholder": "Couleur, dimensions, référence…",
+      "purchase.link": "Lien",
+      "purchase.urgentHelp": "Mettre cet achat en priorité",
+      "purchase.options": "Options",
+      "purchase.saveLater": "Enregistrer pour plus tard",
+      "purchase.backToBuy": "Remettre à acheter",
+      "purchase.markBought": "Marquer acheté",
+      "purchase.markToBuy": "Remettre à acheter",
+      "purchase.empty": "Aucun achat dans cette vue.",
+      "purchase.savedLater": "Achat enregistré pour plus tard.",
+      "purchase.backToList": "Achat remis à acheter.",
+      "purchase.updated": "Achat modifié.",
+      "purchase.addError": "Impossible d’ajouter cet achat.",
+      "purchase.saveError": "Impossible d’enregistrer cet achat.",
+      "purchase.linkOpen": "Ouvrir le lien",
+      "home.housePurchases": "Achats maison",
+      "home.housePurchasesToBuy": "à acheter",
+      "home.urgentShort": "urgent",
+      "recent.purchase": "Achats maison",
       "share.title": "Votre maison",
       "share.codeHelp": "Code à partager avec Deborah",
       "share.copyCode": "Copier le code",
@@ -186,7 +218,7 @@
       "home.underControl": "Everything is under control",
       "home.itemsToBuy": "items to buy",
       "home.tasksToDo": "tasks to do",
-      "home.urgentTasks": "urgent tasks",
+      "home.urgentTasks": "urgent priorities",
       "home.recent": "Recent additions",
       "home.noUrgent": "Nothing urgent at the moment.",
       "home.noRecent": "Nothing added yet.",
@@ -249,6 +281,38 @@
       "house.newTask": "New task",
       "house.editTask": "Edit task",
       "house.empty": "No tasks in this view.",
+      "house.tasksTab": "To do",
+      "house.purchasesTab": "To buy",
+      "purchase.add": "Add a purchase…",
+      "purchase.new": "New purchase",
+      "purchase.edit": "Edit purchase",
+      "purchase.item": "Item",
+      "purchase.placeholder": "e.g. Desk lamp",
+      "purchase.price": "Estimated price",
+      "purchase.status": "Status",
+      "purchase.toBuy": "To buy",
+      "purchase.later": "Later",
+      "purchase.bought": "Bought",
+      "purchase.note": "Note",
+      "purchase.notePlaceholder": "Colour, dimensions, reference…",
+      "purchase.link": "Link",
+      "purchase.urgentHelp": "Mark this purchase as a priority",
+      "purchase.options": "Options",
+      "purchase.saveLater": "Save for later",
+      "purchase.backToBuy": "Put back to buy",
+      "purchase.markBought": "Mark as bought",
+      "purchase.markToBuy": "Put back to buy",
+      "purchase.empty": "No purchases in this view.",
+      "purchase.savedLater": "Purchase saved for later.",
+      "purchase.backToList": "Purchase put back to buy.",
+      "purchase.updated": "Purchase updated.",
+      "purchase.addError": "Unable to add this purchase.",
+      "purchase.saveError": "Unable to save this purchase.",
+      "purchase.linkOpen": "Open link",
+      "home.housePurchases": "Home purchases",
+      "home.housePurchasesToBuy": "to buy",
+      "home.urgentShort": "urgent",
+      "recent.purchase": "Home purchases",
       "share.title": "Your home",
       "share.codeHelp": "Code to share with Deborah",
       "share.copyCode": "Copy code",
@@ -301,7 +365,10 @@
   let shoppingHistory = [];
   let shoppingCategories = [];
   let tasks = [];
+  let homePurchases = [];
+  let houseMode = "tasks";
   let taskFilter = "todo";
+  let homePurchaseFilter = "todo";
   let shoppingFilter = "all";
   let shoppingCategoryFilter = "all";
   let realtimeChannel = null;
@@ -311,8 +378,11 @@
   let shoppingActionItemId = null;
   let categoryActionKey = null;
   let categoryEditorReturnTarget = null;
+  let homePurchaseActionId = null;
   const pendingPurchases = new Set();
   const pendingPurchaseTimers = new Map();
+  const pendingHomePurchases = new Set();
+  const pendingHomePurchaseTimers = new Map();
 
   const views = {
     auth: $("authView"),
@@ -443,6 +513,7 @@
     showPage(currentPage, false);
     if (household) renderAll();
     else renderShoppingSuggestions(false);
+    updateHomePurchaseActionLabels();
   }
 
   function setLanguage(lang) {
@@ -547,6 +618,7 @@
       shoppingHistory = [];
       shoppingCategories = [];
       tasks = [];
+      homePurchases = [];
       setView("auth");
       return;
     }
@@ -580,7 +652,7 @@
   async function loadAll() {
     if (!supabase || !household) return;
 
-    const [membersRes, shoppingRes, tasksRes, historyRes, categoriesRes] = await Promise.all([
+    const [membersRes, shoppingRes, tasksRes, historyRes, categoriesRes, homePurchasesRes] = await Promise.all([
       supabase
         .from("household_members")
         .select("user_id, profiles(id,display_name)")
@@ -605,11 +677,16 @@
         .from("shopping_categories")
         .select("*")
         .eq("household_id", household.id)
-        .order("sort_order", { ascending: true })
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("home_purchases")
+        .select("*")
+        .eq("household_id", household.id)
+        .order("created_at", { ascending: false })
     ]);
 
-    if (membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error) {
-      console.error(membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error);
+    if (membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error) {
+      console.error(membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error);
       showToast(t("toast.syncError"));
       return;
     }
@@ -622,6 +699,7 @@
     tasks = tasksRes.data || [];
     shoppingHistory = historyRes.data || [];
     shoppingCategories = categoriesRes.data || [];
+    homePurchases = homePurchasesRes.data || [];
     renderAll();
   }
 
@@ -674,11 +752,23 @@
     const laterShopping = shopping.filter(x => !x.is_done && x.saved_for_later).length;
     const boughtShopping = shopping.filter(x => x.is_done).length;
     const todoTasks = tasks.filter(x => !x.is_done);
-    const urgent = todoTasks.filter(x => x.is_urgent).length;
+    const activeHomePurchases = homePurchases.filter(x => x.status === "todo");
+    const laterHomePurchases = homePurchases.filter(x => x.status === "later");
+    const boughtHomePurchases = homePurchases.filter(x => x.status === "bought");
+    const urgentTasks = todoTasks.filter(x => x.is_urgent).length;
+    const urgentPurchases = activeHomePurchases.filter(x => x.is_urgent).length;
+    const urgent = urgentTasks + urgentPurchases;
 
     $("shoppingRemaining").textContent = activeShopping;
     $("urgentRemaining").textContent = urgent;
     $("tasksRemaining").textContent = todoTasks.length;
+    $("homePurchaseRemaining").textContent = activeHomePurchases.length;
+    $("homePurchaseUrgent").textContent = urgentPurchases;
+    $("houseTasksTabCount").textContent = todoTasks.length;
+    $("housePurchasesTabCount").textContent = activeHomePurchases.length;
+    $("homePurchaseTodoCount").textContent = `(${activeHomePurchases.length})`;
+    $("homePurchaseLaterCount").textContent = `(${laterHomePurchases.length})`;
+    $("homePurchaseBoughtCount").textContent = `(${boughtHomePurchases.length})`;
     $("shoppingCounter").textContent = currentLang === "uk" ? `${activeShopping} to buy` : `${activeShopping} à acheter`;
     $("shoppingTodoCount").textContent = `(${activeShopping})`;
     $("shoppingLaterCount").textContent = `(${laterShopping})`;
@@ -687,12 +777,15 @@
     renderCategoryControls();
     renderShopping();
     renderTasks();
+    renderHomePurchases();
     renderPriority();
     renderRecent();
     renderMembers();
     renderAssignees();
     renderShoppingSuggestions(false);
     updateShoppingActionLabels();
+    updateHomePurchaseActionLabels();
+    setHouseMode(houseMode);
   }
 
   function shoppingStatusRank(item) {
@@ -809,22 +902,29 @@
   }
 
   function renderPriority() {
-    const urgent = tasks.filter(task => !task.is_done && task.is_urgent).slice(0, 3);
+    const priorities = [
+      ...tasks.filter(task => !task.is_done && task.is_urgent).map(task => ({
+        kind: "task", id: task.id, title: task.title, assignee: task.assignee, created_at: task.created_at
+      })),
+      ...homePurchases.filter(item => item.status === "todo" && item.is_urgent).map(item => ({
+        kind: "purchase", id: item.id, title: item.title, assignee: item.assignee, created_at: item.created_at
+      }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
     const host = $("priorityList");
-    if (!urgent.length) {
+    if (!priorities.length) {
       host.className = "priority-list empty-state compact-empty";
       host.innerHTML = t("home.noUrgent");
       return;
     }
     host.className = "priority-list";
-    host.innerHTML = urgent.map(task => `
+    host.innerHTML = priorities.map(item => `
       <div class="priority-row">
         <span class="priority-alert">!</span>
         <div class="priority-main">
-          <strong>${esc(task.title)}</strong>
-          <small>${esc(t("home.today"))} · ${esc(task.assignee ? memberName(task.assignee) : t("common.anyone"))}</small>
+          <strong>${esc(item.title)}</strong>
+          <small>${esc(item.kind === "purchase" ? t("recent.purchase") : t("home.today"))} · ${esc(item.assignee ? memberName(item.assignee) : t("common.anyone"))}</small>
         </div>
-        <button class="priority-check" data-task-toggle="${task.id}" aria-label="${esc(t("house.done"))}"></button>
+        <button class="priority-check" ${item.kind === "purchase" ? `data-home-purchase-toggle="${item.id}"` : `data-task-toggle="${item.id}"`} aria-label="${esc(item.kind === "purchase" ? t("purchase.bought") : t("house.done"))}"></button>
       </div>
     `).join("");
   }
@@ -846,7 +946,8 @@
     const host = $("recentList");
     const recent = [
       ...shopping.map(item => ({ kind: "shopping", title: item.name, created_at: item.created_at })),
-      ...tasks.map(item => ({ kind: "house", title: item.title, created_at: item.created_at }))
+      ...tasks.map(item => ({ kind: "house", title: item.title, created_at: item.created_at })),
+      ...homePurchases.map(item => ({ kind: "purchase", title: item.title, created_at: item.created_at }))
     ]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 3);
@@ -858,19 +959,23 @@
     }
 
     host.className = "recent-list";
-    host.innerHTML = recent.map(item => `
-      <div class="recent-row">
-        <span class="recent-icon ${item.kind === "house" ? "house" : ""}">
-          ${item.kind === "shopping"
-            ? `<svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg>`
-            : `<svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>`}
-        </span>
-        <div class="recent-copy">
-          <strong>${esc(item.title)}</strong>
-          <small>${esc(item.kind === "shopping" ? t("recent.shopping") : t("recent.house"))} · ${esc(relativeTime(item.created_at))}</small>
+    host.innerHTML = recent.map(item => {
+      const label = item.kind === "shopping" ? t("recent.shopping") : item.kind === "purchase" ? t("recent.purchase") : t("recent.house");
+      const icon = item.kind === "shopping"
+        ? `<svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg>`
+        : item.kind === "purchase"
+          ? `<svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>`
+          : `<svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>`;
+      return `
+        <div class="recent-row">
+          <span class="recent-icon ${item.kind === "house" ? "house" : item.kind === "purchase" ? "purchase" : ""}">${icon}</span>
+          <div class="recent-copy">
+            <strong>${esc(item.title)}</strong>
+            <small>${esc(label)} · ${esc(relativeTime(item.created_at))}</small>
+          </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   function renderMembers() {
@@ -880,12 +985,15 @@
   }
 
   function renderAssignees() {
-    const select = $("taskAssignee");
-    const previous = select.value;
-    select.innerHTML = `<option value="">${esc(t("common.anyone"))}</option>` + members.map(member =>
-      `<option value="${member.id}">${esc(member.display_name)}</option>`
-    ).join("");
-    if ([...select.options].some(option => option.value === previous)) select.value = previous;
+    ["taskAssignee", "homePurchaseAssignee"].forEach(id => {
+      const select = $(id);
+      if (!select) return;
+      const previous = select.value;
+      select.innerHTML = `<option value="">${esc(t("common.anyone"))}</option>` + members.map(member =>
+        `<option value="${member.id}">${esc(member.display_name)}</option>`
+      ).join("");
+      if ([...select.options].some(option => option.value === previous)) select.value = previous;
+    });
   }
 
   function showPage(page, rerender = true) {
@@ -1065,6 +1173,8 @@
     $("shoppingEditSheet").classList.add("hidden");
     $("categoryActionsSheet").classList.add("hidden");
     $("categoryEditSheet").classList.add("hidden");
+    $("homePurchaseSheet").classList.add("hidden");
+    $("homePurchaseActionsSheet").classList.add("hidden");
     $("shareSheet").classList.add("hidden");
   }
 
@@ -1312,6 +1422,230 @@
     await loadAll();
   }
 
+  function setHouseMode(mode) {
+    houseMode = mode === "purchases" ? "purchases" : "tasks";
+    qsa("[data-house-mode]").forEach(button => {
+      const active = button.dataset.houseMode === houseMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    $("houseTasksView").classList.toggle("hidden", houseMode !== "tasks");
+    $("housePurchasesView").classList.toggle("hidden", houseMode !== "purchases");
+  }
+
+  function formatPrice(value) {
+    if (value === null || value === undefined || value === "") return "";
+    const number = Number(value);
+    if (!Number.isFinite(number)) return "";
+    return new Intl.NumberFormat(currentLang === "uk" ? "en-GB" : "fr-FR", {
+      style: "currency", currency: "EUR", maximumFractionDigits: 2
+    }).format(number);
+  }
+
+  function safeExternalUrl(value) {
+    const url = String(value || "").trim();
+    return /^https?:\/\//i.test(url) ? url : "";
+  }
+
+  function renderHomePurchases() {
+    const host = $("homePurchaseList");
+    if (!host) return;
+    let shown = [...homePurchases];
+    shown = shown.filter(item => item.status === homePurchaseFilter);
+    shown.sort((a, b) =>
+      Number(b.is_urgent) - Number(a.is_urgent) ||
+      new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
+    );
+
+    if (!shown.length) {
+      host.innerHTML = `<div class="empty-state">${esc(t("purchase.empty"))}</div>`;
+      return;
+    }
+
+    host.innerHTML = shown.map(item => {
+      const pending = pendingHomePurchases.has(item.id);
+      const bought = item.status === "bought";
+      const checked = bought || pending;
+      const link = safeExternalUrl(item.url);
+      const statusClass = bought ? "done" : item.status === "later" ? "saved-later" : "";
+      return `
+        <div class="list-item home-purchase-item ${statusClass} ${pending ? "purchase-pending" : ""}">
+          <button class="check-button ${checked ? "checked" : ""}" data-home-purchase-toggle="${item.id}" aria-label="${esc(t("purchase.bought"))}">${checked ? "✓" : ""}</button>
+          <div class="item-content">
+            <div class="item-title">${esc(item.title)}</div>
+            <div class="item-meta">
+              ${item.is_urgent && !bought ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
+              ${item.status === "later" ? `<span class="badge later">${esc(t("purchase.later"))}</span>` : ""}
+              <span class="badge person">${esc(item.assignee ? memberName(item.assignee) : t("common.anyone"))}</span>
+              ${item.estimated_price !== null && item.estimated_price !== undefined ? `<span class="badge purchase-price">${esc(formatPrice(item.estimated_price))}</span>` : ""}
+            </div>
+            ${item.note ? `<div class="purchase-note">${esc(item.note)}</div>` : ""}
+          </div>
+          ${link ? `<a class="purchase-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(t("purchase.linkOpen"))}">↗</a>` : ""}
+          <button class="item-menu" data-home-purchase-menu="${item.id}" aria-label="${esc(t("purchase.options"))}">⋮</button>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function openHomePurchaseSheet(item = null) {
+    $("homePurchaseForm").reset();
+    $("homePurchaseId").value = item?.id || "";
+    $("homePurchaseTitle").value = item?.title || "";
+    $("homePurchaseAssignee").value = item?.assignee || "";
+    $("homePurchasePrice").value = item?.estimated_price ?? "";
+    $("homePurchaseStatus").value = item?.status || "todo";
+    $("homePurchaseNote").value = item?.note || "";
+    $("homePurchaseUrl").value = item?.url || "";
+    $("homePurchaseUrgentToggle").checked = !!item?.is_urgent;
+    $("homePurchaseSheetTitle").textContent = item ? t("purchase.edit") : t("purchase.new");
+    $("homePurchaseSheet").classList.remove("hidden");
+    setTimeout(() => $("homePurchaseTitle").focus(), 100);
+  }
+
+  function openHomePurchaseActions(item) {
+    if (!item) return;
+    homePurchaseActionId = item.id;
+    $("homePurchaseActionName").textContent = item.title;
+    updateHomePurchaseActionLabels();
+    $("homePurchaseActionsSheet").classList.remove("hidden");
+  }
+
+  function updateHomePurchaseActionLabels() {
+    const item = homePurchases.find(row => row.id === homePurchaseActionId);
+    if (!item) return;
+    $("homePurchaseLaterActionText").textContent = item.status === "later" ? t("purchase.backToBuy") : t("purchase.saveLater");
+    $("homePurchaseBoughtActionText").textContent = item.status === "bought" ? t("purchase.markToBuy") : t("purchase.markBought");
+  }
+
+  async function saveHomePurchase(event) {
+    event.preventDefault();
+    const id = $("homePurchaseId").value;
+    const title = $("homePurchaseTitle").value.trim();
+    if (!title) return;
+    const priceValue = $("homePurchasePrice").value.trim();
+    const status = $("homePurchaseStatus").value || "todo";
+    const payload = {
+      household_id: household.id,
+      title,
+      assignee: $("homePurchaseAssignee").value || null,
+      is_urgent: $("homePurchaseUrgentToggle").checked,
+      estimated_price: priceValue === "" ? null : Number(priceValue),
+      note: $("homePurchaseNote").value.trim() || null,
+      url: $("homePurchaseUrl").value.trim() || null,
+      status,
+      bought_by: status === "bought" ? user.id : null,
+      bought_at: status === "bought" ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    };
+    if (payload.estimated_price !== null && (!Number.isFinite(payload.estimated_price) || payload.estimated_price < 0)) return;
+
+    let result;
+    if (id) result = await supabase.from("home_purchases").update(payload).eq("id", id);
+    else {
+      payload.created_by = user.id;
+      result = await supabase.from("home_purchases").insert(payload);
+    }
+    if (result.error) return showToast(t("purchase.saveError"));
+    closeSheets();
+    if (id) showToast(t("purchase.updated"));
+    await loadAll();
+  }
+
+  async function completeHomePurchaseAfterDelay(id) {
+    pendingHomePurchaseTimers.delete(id);
+    if (!pendingHomePurchases.has(id)) return;
+    pendingHomePurchases.delete(id);
+    const { error } = await supabase.from("home_purchases").update({
+      status: "bought",
+      bought_by: user.id,
+      bought_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq("id", id);
+    if (error) {
+      showToast(t("toast.updateError"));
+      renderHomePurchases();
+      return;
+    }
+    await loadAll();
+  }
+
+  async function toggleHomePurchase(id) {
+    const item = homePurchases.find(row => row.id === id);
+    if (!item) return;
+
+    if (pendingHomePurchases.has(id)) {
+      clearTimeout(pendingHomePurchaseTimers.get(id));
+      pendingHomePurchaseTimers.delete(id);
+      pendingHomePurchases.delete(id);
+      renderHomePurchases();
+      renderPriority();
+      return;
+    }
+
+    if (item.status === "bought") {
+      const { error } = await supabase.from("home_purchases").update({
+        status: "todo", bought_by: null, bought_at: null, updated_at: new Date().toISOString()
+      }).eq("id", id);
+      if (error) return showToast(t("toast.updateError"));
+      await loadAll();
+      return;
+    }
+
+    pendingHomePurchases.add(id);
+    renderHomePurchases();
+    const timer = setTimeout(() => completeHomePurchaseAfterDelay(id), 2000);
+    pendingHomePurchaseTimers.set(id, timer);
+  }
+
+  async function setHomePurchaseStatus(id, status) {
+    const item = homePurchases.find(row => row.id === id);
+    if (!item) return;
+    if (pendingHomePurchases.has(id)) {
+      clearTimeout(pendingHomePurchaseTimers.get(id));
+      pendingHomePurchaseTimers.delete(id);
+      pendingHomePurchases.delete(id);
+    }
+    const nextStatus = status;
+    const { error } = await supabase.from("home_purchases").update({
+      status: nextStatus,
+      bought_by: nextStatus === "bought" ? user.id : null,
+      bought_at: nextStatus === "bought" ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    }).eq("id", id);
+    if (error) return showToast(t("toast.updateError"));
+    closeSheets();
+    await loadAll();
+  }
+
+  async function toggleHomePurchaseLater(id) {
+    const item = homePurchases.find(row => row.id === id);
+    if (!item) return;
+    const next = item.status === "later" ? "todo" : "later";
+    await setHomePurchaseStatus(id, next);
+    showToast(next === "later" ? t("purchase.savedLater") : t("purchase.backToList"));
+  }
+
+  async function toggleHomePurchaseBoughtAction(id) {
+    const item = homePurchases.find(row => row.id === id);
+    if (!item) return;
+    await setHomePurchaseStatus(id, item.status === "bought" ? "todo" : "bought");
+  }
+
+  async function deleteHomePurchase(id) {
+    if (!id) return;
+    if (pendingHomePurchases.has(id)) {
+      clearTimeout(pendingHomePurchaseTimers.get(id));
+      pendingHomePurchaseTimers.delete(id);
+      pendingHomePurchases.delete(id);
+    }
+    const { error } = await supabase.from("home_purchases").delete().eq("id", id);
+    if (error) return showToast(t("toast.deleteError"));
+    homePurchaseActionId = null;
+    closeSheets();
+    await loadAll();
+  }
+
   async function saveTask(event) {
     event.preventDefault();
     const id = $("taskId").value;
@@ -1442,6 +1776,11 @@
     qsa(".nav-button").forEach(button => button.addEventListener("click", () => showPage(button.dataset.page)));
     qsa("[data-go]").forEach(button => button.addEventListener("click", () => showPage(button.dataset.go)));
     qsa("[data-page-jump]").forEach(button => button.addEventListener("click", () => showPage(button.dataset.pageJump)));
+    qsa("[data-house-mode-jump]").forEach(button => button.addEventListener("click", () => {
+      setHouseMode(button.dataset.houseModeJump);
+      showPage("house");
+    }));
+    qsa("[data-house-mode]").forEach(button => button.addEventListener("click", () => setHouseMode(button.dataset.houseMode)));
 
     qsa("#shoppingFilters [data-shopping-filter]").forEach(button => button.addEventListener("click", () => {
       shoppingFilter = button.dataset.shoppingFilter;
@@ -1521,7 +1860,9 @@
 
     $("priorityList").addEventListener("click", event => {
       const toggle = event.target.closest("[data-task-toggle]");
+      const purchaseToggle = event.target.closest("[data-home-purchase-toggle]");
       if (toggle) toggleTask(toggle.dataset.taskToggle);
+      if (purchaseToggle) toggleHomePurchase(purchaseToggle.dataset.homePurchaseToggle);
     });
 
     $("openTaskComposer").addEventListener("click", () => openTaskSheet());
@@ -1542,6 +1883,33 @@
       qsa("#taskFilters [data-filter]").forEach(x => x.classList.toggle("active", x === button));
       renderTasks();
     }));
+
+    qsa("#homePurchaseFilters [data-purchase-filter]").forEach(button => button.addEventListener("click", () => {
+      homePurchaseFilter = button.dataset.purchaseFilter;
+      qsa("#homePurchaseFilters [data-purchase-filter]").forEach(x => x.classList.toggle("active", x === button));
+      renderHomePurchases();
+    }));
+
+    $("openHomePurchaseComposer").addEventListener("click", () => openHomePurchaseSheet());
+    $("homePurchaseForm").addEventListener("submit", saveHomePurchase);
+    $("closeHomePurchaseSheet").addEventListener("click", closeSheets);
+    $("homePurchaseSheet").addEventListener("click", event => { if (event.target === $("homePurchaseSheet")) closeSheets(); });
+    $("homePurchaseList").addEventListener("click", event => {
+      const toggle = event.target.closest("[data-home-purchase-toggle]");
+      const menu = event.target.closest("[data-home-purchase-menu]");
+      if (toggle) toggleHomePurchase(toggle.dataset.homePurchaseToggle);
+      if (menu) openHomePurchaseActions(homePurchases.find(item => item.id === menu.dataset.homePurchaseMenu));
+    });
+    $("closeHomePurchaseActions").addEventListener("click", closeSheets);
+    $("homePurchaseActionsSheet").addEventListener("click", event => { if (event.target === $("homePurchaseActionsSheet")) closeSheets(); });
+    $("homePurchaseEditAction").addEventListener("click", () => {
+      const item = homePurchases.find(row => row.id === homePurchaseActionId);
+      $("homePurchaseActionsSheet").classList.add("hidden");
+      openHomePurchaseSheet(item);
+    });
+    $("homePurchaseLaterAction").addEventListener("click", () => toggleHomePurchaseLater(homePurchaseActionId));
+    $("homePurchaseBoughtAction").addEventListener("click", () => toggleHomePurchaseBoughtAction(homePurchaseActionId));
+    $("homePurchaseDeleteAction").addEventListener("click", () => deleteHomePurchase(homePurchaseActionId));
 
     $("openHouseholdInfo").addEventListener("click", () => $("shareSheet").classList.remove("hidden"));
     $("closeShareSheet").addEventListener("click", closeSheets);

@@ -133,6 +133,17 @@
           </button>
         </div>
 
+        <button id="homePurchaseSummary" class="home-purchase-summary" type="button" data-house-mode-jump="purchases">
+          <span class="home-purchase-summary-icon">
+            <svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+          </span>
+          <span class="home-purchase-summary-copy">
+            <strong data-i18n="home.housePurchases">Achats maison</strong>
+            <small><b id="homePurchaseRemaining">0</b> <span data-i18n="home.housePurchasesToBuy">à acheter</span> · <b id="homePurchaseUrgent">0</b> <span data-i18n="home.urgentShort">urgent</span></small>
+          </span>
+          <span class="home-purchase-summary-chevron">›</span>
+        </button>
+
         <section class="urgent-panel">
           <div class="urgent-panel-head">
             <span class="urgent-house-icon">
@@ -191,18 +202,46 @@
       </div>
 
       <div id="housePage" class="page">
-        <button id="openTaskComposer" class="task-composer-row">
-          <span data-i18n="house.addTask">Ajouter une tâche…</span>
-          <b>+</b>
-        </button>
-
-        <div class="filter-row three-cols" id="taskFilters">
-          <button class="chip" data-filter="all" data-i18n="common.all">Toutes</button>
-          <button class="chip active" data-filter="todo" data-i18n="house.toDo">À faire</button>
-          <button class="chip" data-filter="done" data-i18n="house.done">Faites</button>
+        <div class="house-mode-switch" id="houseModeSwitch" role="tablist" aria-label="Maison">
+          <button class="house-mode-button active" type="button" data-house-mode="tasks" role="tab" aria-selected="true">
+            <span data-i18n="house.tasksTab">À faire</span>
+            <span id="houseTasksTabCount" class="house-mode-count">0</span>
+          </button>
+          <button class="house-mode-button" type="button" data-house-mode="purchases" role="tab" aria-selected="false">
+            <span data-i18n="house.purchasesTab">À acheter</span>
+            <span id="housePurchasesTabCount" class="house-mode-count">0</span>
+          </button>
         </div>
 
-        <div id="taskList" class="item-list mock-list task-mock-list"></div>
+        <section id="houseTasksView" class="house-subview">
+          <button id="openTaskComposer" class="task-composer-row">
+            <span data-i18n="house.addTask">Ajouter une tâche…</span>
+            <b>+</b>
+          </button>
+
+          <div class="filter-row three-cols" id="taskFilters">
+            <button class="chip" data-filter="all" data-i18n="common.all">Toutes</button>
+            <button class="chip active" data-filter="todo" data-i18n="house.toDo">À faire</button>
+            <button class="chip" data-filter="done" data-i18n="house.done">Faites</button>
+          </div>
+
+          <div id="taskList" class="item-list mock-list task-mock-list"></div>
+        </section>
+
+        <section id="housePurchasesView" class="house-subview hidden">
+          <button id="openHomePurchaseComposer" class="task-composer-row purchase-composer-row">
+            <span data-i18n="purchase.add">Ajouter un achat…</span>
+            <b>+</b>
+          </button>
+
+          <div class="filter-row three-cols" id="homePurchaseFilters">
+            <button class="chip active" data-purchase-filter="todo"><span data-i18n="purchase.toBuy">À acheter</span> <span id="homePurchaseTodoCount">0</span></button>
+            <button class="chip" data-purchase-filter="later"><span data-i18n="purchase.later">Plus tard</span> <span id="homePurchaseLaterCount">0</span></button>
+            <button class="chip" data-purchase-filter="bought"><span data-i18n="purchase.bought">Achetés</span> <span id="homePurchaseBoughtCount">0</span></button>
+          </div>
+
+          <div id="homePurchaseList" class="item-list mock-list task-mock-list purchase-list"></div>
+        </section>
       </div>
 
       <nav class="bottom-nav">
@@ -237,6 +276,43 @@
         <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
         <button id="deleteTaskBtn" class="danger-link hidden" type="button" data-i18n="house.deleteTask">Supprimer cette tâche</button>
       </form>
+    </section>
+  </div>
+
+  <div id="homePurchaseSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 id="homePurchaseSheetTitle" data-i18n="purchase.new">Nouvel achat</h3><button id="closeHomePurchaseSheet" class="icon-button">×</button></div>
+      <form id="homePurchaseForm" class="form-stack">
+        <input id="homePurchaseId" type="hidden" />
+        <label><span data-i18n="purchase.item">Article</span><input id="homePurchaseTitle" type="text" data-i18n-placeholder="purchase.placeholder" placeholder="Ex. Lampe de bureau" maxlength="120" required /></label>
+        <label><span data-i18n="house.assignee">Pour qui ?</span><select id="homePurchaseAssignee"><option value="">N’importe qui</option></select></label>
+        <div class="purchase-form-grid">
+          <label><span data-i18n="purchase.price">Prix estimé</span><div class="price-input-wrap"><span>€</span><input id="homePurchasePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" /></div></label>
+          <label><span data-i18n="purchase.status">Statut</span><select id="homePurchaseStatus"><option value="todo" data-i18n="purchase.toBuy">À acheter</option><option value="later" data-i18n="purchase.later">Plus tard</option><option value="bought" data-i18n="purchase.bought">Acheté</option></select></label>
+        </div>
+        <label><span data-i18n="purchase.note">Note</span><textarea id="homePurchaseNote" data-i18n-placeholder="purchase.notePlaceholder" placeholder="Couleur, dimensions, référence…" maxlength="500" rows="3"></textarea></label>
+        <label><span data-i18n="purchase.link">Lien</span><input id="homePurchaseUrl" type="url" inputmode="url" placeholder="https://…" maxlength="1000" /></label>
+        <label class="toggle-line">
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="purchase.urgentHelp">Mettre cet achat en priorité</small></div>
+          <input id="homePurchaseUrgentToggle" type="checkbox" class="switch-input" />
+          <span class="switch"></span>
+        </label>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="homePurchaseActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="purchase.options">Options</p><h3 id="homePurchaseActionName">Achat</h3></div><button id="closeHomePurchaseActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="homePurchaseEditAction" class="sheet-action" type="button"><span class="sheet-action-icon">✎</span><span data-i18n="common.edit">Modifier</span></button>
+        <button id="homePurchaseLaterAction" class="sheet-action" type="button"><span class="sheet-action-icon">☆</span><span id="homePurchaseLaterActionText" data-i18n="purchase.saveLater">Enregistrer pour plus tard</span></button>
+        <button id="homePurchaseBoughtAction" class="sheet-action" type="button"><span class="sheet-action-icon">✓</span><span id="homePurchaseBoughtActionText" data-i18n="purchase.markBought">Marquer acheté</span></button>
+        <button id="homePurchaseDeleteAction" class="sheet-action danger-action" type="button"><span class="sheet-action-icon">×</span><span data-i18n="common.delete">Supprimer</span></button>
+      </div>
     </section>
   </div>
 

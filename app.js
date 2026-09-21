@@ -78,6 +78,19 @@
       "shopping.savedLater": "Pour plus tard",
       "shopping.historyHint": "Déjà utilisé",
       "shopping.noneHistory": "Aucun article mémorisé pour le moment.",
+      "shopping.category": "Catégorie",
+      "shopping.categories": "Catégories",
+      "shopping.filterCategory": "Filtrer par catégorie",
+      "shopping.allCategories": "Toutes les catégories",
+      "category.fruit_veg": "Fruits & légumes",
+      "category.bakery": "Boulangerie",
+      "category.fresh": "Produits frais",
+      "category.meat_fish": "Viande & poisson",
+      "category.pantry": "Épicerie",
+      "category.drinks": "Boissons",
+      "category.frozen": "Surgelés",
+      "category.home": "Maison",
+      "category.other": "Autres",
       "house.addTask": "Ajouter une tâche…",
       "house.toDo": "À faire",
       "house.done": "Faites",
@@ -180,6 +193,19 @@
       "shopping.savedLater": "For later",
       "shopping.historyHint": "Used before",
       "shopping.noneHistory": "No remembered items yet.",
+      "shopping.category": "Category",
+      "shopping.categories": "Categories",
+      "shopping.filterCategory": "Filter by category",
+      "shopping.allCategories": "All categories",
+      "category.fruit_veg": "Fruit & Veg",
+      "category.bakery": "Bakery",
+      "category.fresh": "Chilled & Dairy",
+      "category.meat_fish": "Meat & Fish",
+      "category.pantry": "Pantry",
+      "category.drinks": "Drinks",
+      "category.frozen": "Frozen",
+      "category.home": "Household",
+      "category.other": "Other",
       "house.addTask": "Add a task…",
       "house.toDo": "To do",
       "house.done": "Done",
@@ -221,6 +247,18 @@
     }
   };
 
+  const SHOPPING_CATEGORIES = [
+    { key: "fruit_veg", emoji: "🥬" },
+    { key: "bakery", emoji: "🥖" },
+    { key: "fresh", emoji: "🥛" },
+    { key: "meat_fish", emoji: "🥩" },
+    { key: "pantry", emoji: "🥫" },
+    { key: "drinks", emoji: "🥤" },
+    { key: "frozen", emoji: "❄️" },
+    { key: "home", emoji: "🧽" },
+    { key: "other", emoji: "📦" }
+  ];
+
   let currentLang = localStorage.getItem("lista_lang") === "uk" ? "uk" : "fr";
   let currentPage = "home";
   let supabase = null;
@@ -232,9 +270,11 @@
   let tasks = [];
   let taskFilter = "todo";
   let shoppingFilter = "all";
+  let shoppingCategoryFilter = "all";
   let realtimeChannel = null;
   let toastTimer = null;
   let newShoppingUrgent = false;
+  let newShoppingCategory = "other";
   let shoppingActionItemId = null;
   const pendingPurchases = new Set();
   const pendingPurchaseTimers = new Map();
@@ -247,6 +287,45 @@
 
   function t(key) {
     return translations[currentLang]?.[key] ?? translations.fr[key] ?? key;
+  }
+
+  function categoryMeta(key) {
+    return SHOPPING_CATEGORIES.find(category => category.key === key) || SHOPPING_CATEGORIES[SHOPPING_CATEGORIES.length - 1];
+  }
+
+  function categoryLabel(key) {
+    const meta = categoryMeta(key);
+    return t(`category.${meta.key}`);
+  }
+
+  function categoryDisplay(key) {
+    const meta = categoryMeta(key);
+    return `${meta.emoji} ${categoryLabel(meta.key)}`;
+  }
+
+  function categoryRank(key) {
+    const index = SHOPPING_CATEGORIES.findIndex(category => category.key === key);
+    return index === -1 ? SHOPPING_CATEGORIES.length : index;
+  }
+
+  function fillCategorySelect(select, { includeAll = false, selected = null } = {}) {
+    if (!select) return;
+    const wanted = selected ?? select.value;
+    const options = [];
+    if (includeAll) options.push(`<option value="all">${esc(t("shopping.allCategories"))}</option>`);
+    options.push(...SHOPPING_CATEGORIES.map(category =>
+      `<option value="${category.key}">${category.emoji} ${esc(categoryLabel(category.key))}</option>`
+    ));
+    select.innerHTML = options.join("");
+    if ([...select.options].some(option => option.value === wanted)) select.value = wanted;
+    else select.value = includeAll ? "all" : "other";
+  }
+
+  function renderCategoryControls() {
+    fillCategorySelect($("shoppingCategory"), { selected: newShoppingCategory });
+    fillCategorySelect($("shoppingCategoryFilter"), { includeAll: true, selected: shoppingCategoryFilter });
+    const editSelect = $("shoppingEditCategory");
+    if (editSelect && !editSelect.options.length) fillCategorySelect(editSelect, { selected: "other" });
   }
 
   function applyLanguage() {
@@ -276,6 +355,7 @@
       }
     }
 
+    renderCategoryControls();
     setSyncState();
     showPage(currentPage, false);
     if (household) renderAll();
@@ -514,6 +594,7 @@
     $("shoppingLaterCount").textContent = `(${laterShopping})`;
     $("shoppingDoneCount").textContent = `(${boughtShopping})`;
 
+    renderCategoryControls();
     renderShopping();
     renderTasks();
     renderPriority();
@@ -537,6 +618,7 @@
     if (shoppingFilter === "todo") shown = shown.filter(item => !item.is_done && !item.saved_for_later);
     if (shoppingFilter === "later") shown = shown.filter(item => !item.is_done && item.saved_for_later);
     if (shoppingFilter === "done") shown = shown.filter(item => item.is_done);
+    if (shoppingCategoryFilter !== "all") shown = shown.filter(item => (item.category || "other") === shoppingCategoryFilter);
 
     if (!shown.length) {
       host.innerHTML = `<div class="empty-state">${shopping.length ? t("shopping.emptyView") : t("shopping.empty")}</div>`;
@@ -544,12 +626,20 @@
     }
 
     const ordered = shown.sort((a, b) =>
+      categoryRank(a.category || "other") - categoryRank(b.category || "other") ||
       shoppingStatusRank(a) - shoppingStatusRank(b) ||
       Number(b.is_urgent) - Number(a.is_urgent) ||
       new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
     );
 
-    host.innerHTML = ordered.map(item => {
+    const groups = new Map();
+    ordered.forEach(item => {
+      const key = categoryMeta(item.category || "other").key;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    });
+
+    const renderItem = item => {
       const pending = pendingPurchases.has(item.id);
       const checked = item.is_done || pending;
       const statusClasses = [
@@ -571,6 +661,19 @@
           ${item.quantity ? `<span class="badge quantity">${esc(item.quantity)}</span>` : ""}
           <button class="item-menu" data-shopping-menu="${item.id}" aria-label="${esc(t("shopping.options"))}">⋮</button>
         </div>
+      `;
+    };
+
+    host.innerHTML = [...groups.entries()].map(([key, items]) => {
+      const meta = categoryMeta(key);
+      return `
+        <section class="shopping-category-group">
+          <div class="shopping-category-header">
+            <div><span class="category-emoji">${meta.emoji}</span><strong>${esc(categoryLabel(key))}</strong></div>
+            <small>${items.length}</small>
+          </div>
+          <div class="shopping-category-items">${items.map(renderItem).join("")}</div>
+        </section>
       `;
     }).join("");
   }
@@ -738,6 +841,7 @@
     $("shoppingEditId").value = item.id;
     $("shoppingEditName").value = item.name || "";
     $("shoppingEditQty").value = item.quantity || "";
+    fillCategorySelect($("shoppingEditCategory"), { selected: item.category || "other" });
     $("shoppingEditUrgent").checked = !!item.is_urgent;
     $("shoppingActionsSheet").classList.add("hidden");
     $("shoppingEditSheet").classList.remove("hidden");
@@ -797,7 +901,10 @@
           <strong>${esc(item.display_name)}</strong>
           <small>${esc(t("shopping.historyHint"))}${item.last_quantity ? ` · ${esc(item.last_quantity)}` : ""}</small>
         </span>
-        ${item.last_urgent ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
+        <span class="suggestion-badges">
+          <span class="badge category">${categoryMeta(item.last_category || "other").emoji} ${esc(categoryLabel(item.last_category || "other"))}</span>
+          ${item.last_urgent ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
+        </span>
       </button>
     `).join("");
     host.classList.remove("hidden");
@@ -808,12 +915,14 @@
     if (!historyItem) return;
     $("shoppingName").value = historyItem.display_name || "";
     $("shoppingQty").value = historyItem.last_quantity || "";
+    newShoppingCategory = categoryMeta(historyItem.last_category || "other").key;
+    renderCategoryControls();
     setNewShoppingUrgent(!!historyItem.last_urgent);
     $("shoppingSuggestions").classList.add("hidden");
     $("shoppingQty").focus();
   }
 
-  async function rememberShoppingItem(name, quantity, urgent) {
+  async function rememberShoppingItem(name, quantity, urgent, category) {
     if (!household || !name.trim()) return;
     const normalized = normaliseItemName(name);
     const existing = shoppingHistory.find(item => item.normalized_name === normalized);
@@ -823,6 +932,7 @@
       display_name: name.trim(),
       last_quantity: quantity?.trim() || null,
       last_urgent: !!urgent,
+      last_category: categoryMeta(category || "other").key,
       use_count: (existing?.use_count || 0) + 1,
       last_used_at: new Date().toISOString()
     };
@@ -836,12 +946,14 @@
   async function addShopping() {
     const name = $("shoppingName").value.trim();
     const quantity = $("shoppingQty").value.trim();
+    const category = categoryMeta($("shoppingCategory").value || newShoppingCategory).key;
     if (!name) return;
 
     const { error } = await supabase.from("shopping_items").insert({
       household_id: household.id,
       name,
       quantity: quantity || null,
+      category,
       is_urgent: newShoppingUrgent,
       saved_for_later: false,
       created_by: user.id
@@ -849,9 +961,11 @@
 
     if (error) return showToast(t("toast.addShoppingError"));
 
-    await rememberShoppingItem(name, quantity, newShoppingUrgent);
+    await rememberShoppingItem(name, quantity, newShoppingUrgent, category);
     $("shoppingName").value = "";
     $("shoppingQty").value = "";
+    newShoppingCategory = "other";
+    renderCategoryControls();
     setNewShoppingUrgent(false);
     $("shoppingSuggestions").classList.add("hidden");
     await loadAll();
@@ -952,6 +1066,7 @@
     const id = $("shoppingEditId").value;
     const name = $("shoppingEditName").value.trim();
     const quantity = $("shoppingEditQty").value.trim();
+    const category = categoryMeta($("shoppingEditCategory").value || "other").key;
     const isUrgent = $("shoppingEditUrgent").checked;
     if (!id || !name) return;
 
@@ -959,13 +1074,14 @@
       .update({
         name,
         quantity: quantity || null,
+        category,
         is_urgent: isUrgent,
         updated_at: new Date().toISOString()
       })
       .eq("id", id);
 
     if (error) return showToast(t("toast.updateError"));
-    await rememberShoppingItem(name, quantity, isUrgent);
+    await rememberShoppingItem(name, quantity, isUrgent, category);
     closeSheets();
     showToast(t("toast.itemUpdated"));
     await loadAll();
@@ -1119,6 +1235,13 @@
     }));
 
     $("shoppingUrgentBtn").addEventListener("click", () => setNewShoppingUrgent(!newShoppingUrgent));
+    $("shoppingCategory").addEventListener("change", event => {
+      newShoppingCategory = categoryMeta(event.target.value).key;
+    });
+    $("shoppingCategoryFilter").addEventListener("change", event => {
+      shoppingCategoryFilter = event.target.value || "all";
+      renderShopping();
+    });
     $("addShoppingBtn").addEventListener("click", addShopping);
     $("shoppingName").addEventListener("keydown", event => { if (event.key === "Enter") addShopping(); });
     $("shoppingQty").addEventListener("keydown", event => { if (event.key === "Enter") addShopping(); });

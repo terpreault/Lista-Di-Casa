@@ -157,8 +157,14 @@
           <div class="composer shopping-composer">
             <input id="shoppingName" type="text" data-i18n-placeholder="shopping.addPlaceholder" placeholder="Ajouter un article…" maxlength="100" autocomplete="off" />
             <input id="shoppingQty" class="qty-input" type="text" data-i18n-placeholder="shopping.qtyShort" placeholder="Qté" maxlength="20" />
-            <button id="shoppingUrgentBtn" class="shopping-urgent-button" type="button" aria-pressed="false" data-i18n-title="common.urgent" title="Urgent">!</button>
             <button id="addShoppingBtn" class="add-button" data-i18n-aria="common.add" aria-label="Ajouter">+</button>
+          </div>
+          <div class="shopping-secondary-options">
+            <label class="shopping-category-select">
+              <span data-i18n="shopping.category">Catégorie</span>
+              <select id="shoppingCategory" aria-label="Catégorie"></select>
+            </label>
+            <button id="shoppingUrgentBtn" class="shopping-urgent-button" type="button" aria-pressed="false" data-i18n-title="common.urgent" title="Urgent"><b>!</b><span data-i18n="common.urgent">Urgent</span></button>
           </div>
           <div id="shoppingSuggestions" class="shopping-suggestions hidden"></div>
         </div>
@@ -170,7 +176,12 @@
           <button class="chip" data-shopping-filter="done"><span data-i18n="shopping.bought">Achetés</span> <span id="shoppingDoneCount">0</span></button>
         </div>
 
-        <div id="shoppingList" class="item-list mock-list"></div>
+        <label class="category-filter-control">
+          <span data-i18n="shopping.filterCategory">Filtrer par catégorie</span>
+          <select id="shoppingCategoryFilter"></select>
+        </label>
+
+        <div id="shoppingList" class="item-list mock-list grouped-shopping-list"></div>
 
         <button id="clearBoughtBtn" class="clear-bought-button">
           <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg>
@@ -255,6 +266,7 @@
         <input id="shoppingEditId" type="hidden" />
         <label><span data-i18n="shopping.item">Article</span><input id="shoppingEditName" type="text" maxlength="100" required /></label>
         <label><span data-i18n="shopping.quantity">Quantité</span><input id="shoppingEditQty" type="text" maxlength="20" /></label>
+        <label><span data-i18n="shopping.category">Catégorie</span><select id="shoppingEditCategory"></select></label>
         <label class="toggle-line">
           <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="shopping.urgentHelp">Mettre cet article en priorité</small></div>
           <input id="shoppingEditUrgent" type="checkbox" class="switch-input" />

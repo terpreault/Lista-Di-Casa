@@ -253,7 +253,7 @@ body { overscroll-behavior: none; }
 .app-header-actions .header-side-button svg { width: 21px; height: 21px; }
 
 .shopping-add-area { position: relative; z-index: 12; }
-.shopping-composer { grid-template-columns: minmax(0,1fr) 52px 38px 42px; }
+.shopping-composer { grid-template-columns: minmax(0,1fr) 54px 42px; }
 .shopping-urgent-button {
   width: 34px;
   height: 34px;
@@ -353,10 +353,123 @@ body { overscroll-behavior: none; }
 .sheet-action.danger-action { color: var(--danger); }
 .sheet-action.danger-action .sheet-action-icon { background: #FBEAEA; color: var(--danger); }
 
+
+.shopping-secondary-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 7px;
+}
+.shopping-category-select {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 4px 6px 4px 11px;
+  border: 1px solid #E5E1F1;
+  border-radius: 12px;
+  background: rgba(255,255,255,.92);
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 760;
+}
+.shopping-category-select select {
+  min-width: 0;
+  border: 0;
+  background: var(--lavender-faint);
+  border-radius: 9px;
+  padding: 7px 28px 7px 9px;
+  color: #5D5675;
+  font-size: 10px;
+  box-shadow: none;
+}
+.shopping-urgent-button {
+  width: auto;
+  min-width: 76px;
+  height: auto;
+  min-height: 38px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10px;
+}
+.shopping-urgent-button b { font-size: 15px; line-height: 1; }
+.category-filter-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 11px;
+  padding: 7px 8px 7px 12px;
+  background: rgba(255,255,255,.76);
+  border: 1px solid #EAE6F3;
+  border-radius: 13px;
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 760;
+}
+.category-filter-control select {
+  min-width: 0;
+  border: 0;
+  border-radius: 9px;
+  background: #F4F1FC;
+  color: #665F7D;
+  padding: 7px 28px 7px 9px;
+  font-size: 10px;
+  box-shadow: none;
+}
+.item-list.mock-list.grouped-shopping-list {
+  display: grid;
+  gap: 10px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.shopping-category-group {
+  overflow: hidden;
+  border: 1px solid rgba(234,231,243,.95);
+  border-radius: 17px;
+  background: white;
+  box-shadow: var(--shadow);
+}
+.shopping-category-header {
+  min-height: 38px;
+  padding: 8px 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(90deg, #F8F6FF, #FCFBFF);
+  border-bottom: 1px solid #EFECF6;
+  color: #5F5876;
+}
+.shopping-category-header > div { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.shopping-category-header strong { font-size: 10px; text-transform: uppercase; letter-spacing: .35px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shopping-category-header small { min-width: 22px; height: 20px; display: grid; place-items: center; border-radius: 999px; background: #EEEAFE; color: var(--lavender); font-size: 9px; font-weight: 800; }
+.category-emoji { font-size: 15px; line-height: 1; }
+.shopping-category-items .list-item:first-child { border-top: 0; }
+.badge.category { background: #F2F0F8; color: #665F7D; white-space: nowrap; }
+.suggestion-badges { display: flex; align-items: center; justify-content: flex-end; gap: 5px; flex-wrap: wrap; }
+@media (max-width: 390px) {
+  .shopping-category-select { grid-template-columns: 1fr; gap: 2px; padding-left: 8px; }
+  .shopping-category-select > span { display: none; }
+  .shopping-urgent-button { min-width: 68px; padding-inline: 9px; }
+  .category-filter-control { grid-template-columns: 1fr; gap: 3px; }
+  .category-filter-control > span { display: none; }
+  .suggestion-badges .badge.category { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+}
+
 @media (max-width: 390px) {
   .app-view { padding-inline: 14px; }
   .app-header { gap: 4px; }
   .language-switch.compact button { min-width: 22px; padding-inline: 4px; }
   .filter-row.four-cols .chip { font-size: 8.5px; }
-  .shopping-composer { grid-template-columns: minmax(0,1fr) 48px 36px 40px; }
+  .shopping-composer { grid-template-columns: minmax(0,1fr) 48px 40px; }
 }

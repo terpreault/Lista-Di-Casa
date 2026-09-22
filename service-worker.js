@@ -1,4 +1,4 @@
-const CACHE = "lista-di-casa-v6";
+const CACHE = "casami-v7";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./config.js", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", event => {

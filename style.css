@@ -1,20 +1,21 @@
 :root {
-  --lavender: #7969EA;
-  --lavender-2: #9A8FF3;
-  --lavender-soft: #EEEBFF;
-  --lavender-faint: #F8F6FF;
-  --green: #42C58A;
-  --green-dark: #26A96E;
-  --green-soft: #DFF8EC;
-  --yellow: #FFC94A;
-  --yellow-soft: #FFF3C9;
-  --ink: #19182A;
-  --muted: #7D7A92;
-  --line: #EAE7F3;
-  --surface: #FFFFFF;
-  --background: #FAF9FF;
-  --danger: #B45151;
-  --shadow: 0 10px 28px rgba(57, 49, 107, .07);
+  --lavender: #8A76C5;          /* Lavande CASAMI */
+  --lavender-2: #A899D3;
+  --lavender-soft: #E9E4F3;     /* Lavande Soft */
+  --lavender-faint: #F4F0F7;
+  --green: #6F8C79;             /* Vert Sauge */
+  --green-dark: #557060;
+  --green-soft: #E4EAE5;        /* Vert Soft */
+  --yellow: #E5B649;            /* Jaune Miel */
+  --yellow-soft: #F7EDCF;       /* Jaune Soft */
+  --ink: #20303A;               /* Bleu Encre */
+  --ink-soft: #E3E7E9;          /* Encre Soft */
+  --muted: #747A7E;
+  --line: #E3E7E9;
+  --surface: #FCFBF8;           /* Blanc Maison */
+  --background: #F6F3EE;        /* Crème Maison */
+  --danger: #B45D5D;
+  --shadow: 0 9px 28px rgba(32, 48, 58, .065);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -660,4 +661,376 @@ textarea:focus { border-color: rgba(121,105,234,.65); box-shadow: 0 0 0 3px rgba
   .purchase-form-grid { grid-template-columns: 1fr; }
   .home-purchase-summary { grid-template-columns: 36px minmax(0,1fr) 18px; }
   .home-purchase-summary-icon { width: 36px; height: 36px; }
+}
+
+
+/* =========================================================
+   CASAMI V7 — Calm Premium visual identity
+   Brand: CASAMI · Manrope · Calm Premium palette
+   ========================================================= */
+
+html { background: var(--background); }
+
+body {
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 7% 0%, rgba(138,118,197,.075), transparent 27%),
+    radial-gradient(circle at 100% 18%, rgba(111,140,121,.055), transparent 22%),
+    linear-gradient(180deg, #F9F6F1 0%, var(--background) 100%);
+  color: var(--ink);
+}
+
+button, input, select, textarea { font-family: inherit; }
+
+h1 {
+  color: var(--ink);
+  font-weight: 800;
+  letter-spacing: .055em;
+  font-size: clamp(38px, 10vw, 50px);
+}
+h2, h3 { color: var(--ink); }
+p, .subtitle { color: var(--muted); }
+
+.eyebrow {
+  color: var(--lavender);
+  font-weight: 800;
+  letter-spacing: 1.35px;
+}
+
+.card,
+.home-main-card,
+.urgent-panel,
+.recent-list,
+.home-purchase-summary,
+.shopping-category-group,
+.item-list.mock-list {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+
+.card { border-radius: 24px; }
+
+.brand-logo-large {
+  background: var(--lavender-soft);
+  color: var(--lavender);
+  border-radius: 22px;
+}
+
+.segmented,
+.house-mode-switch {
+  background: var(--ink-soft);
+  border-color: transparent;
+}
+.segment.active,
+.house-mode-button.active {
+  background: var(--surface);
+  color: var(--lavender);
+  box-shadow: 0 4px 14px rgba(32,48,58,.06);
+}
+
+label { color: #536066; }
+input, select, textarea {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  border-radius: 16px;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(138,118,197,.65);
+  box-shadow: 0 0 0 3px rgba(138,118,197,.10);
+}
+
+.primary {
+  background: var(--lavender);
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 7px 18px rgba(138,118,197,.20);
+}
+.secondary {
+  background: var(--lavender-soft);
+  color: #67559E;
+  border-radius: 16px;
+}
+
+.icon-button {
+  background: var(--lavender-soft);
+  color: var(--ink);
+}
+
+.welcome-card.lavender { background: var(--lavender-soft); }
+
+.app-header {
+  margin-bottom: 26px;
+}
+.header-center h2 {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+.header-side-button { color: var(--lavender); }
+.header-home-mark { color: var(--green); }
+.sync-line { color: var(--muted); }
+.sync-line span:first-child { background: var(--green); }
+
+.home-welcome h3 {
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 26px;
+}
+.home-welcome p { color: var(--muted); }
+.leaf-mark { color: var(--green); }
+
+.home-main-card {
+  border-radius: 24px;
+  min-height: 166px;
+}
+.home-card-icon {
+  color: var(--lavender);
+  background: var(--lavender-soft);
+  border-radius: 15px;
+}
+.home-card-icon.green-icon {
+  color: var(--green-dark);
+  background: var(--green-soft);
+}
+.home-main-card strong { color: var(--ink); }
+.home-main-card small { color: var(--muted); }
+
+.lavender-link {
+  background: var(--lavender-soft);
+  color: #67559E;
+}
+.green-link {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
+.home-purchase-summary {
+  border-radius: 20px;
+}
+.home-purchase-summary-icon {
+  background: var(--yellow-soft);
+  color: #9A7723;
+}
+.home-purchase-summary-copy small b { color: var(--ink); }
+.home-purchase-summary-chevron { color: #8C969B; }
+
+.urgent-panel { border-radius: 20px; }
+.urgent-panel-head {
+  background: var(--yellow-soft);
+  color: #80631D;
+}
+.priority-alert {
+  background: var(--yellow);
+  color: #fff;
+}
+.priority-row,
+.recent-row,
+.list-item {
+  border-color: var(--line);
+}
+.priority-check { border-color: #AEB7BB; }
+
+.recent-icon { color: var(--lavender); }
+.recent-icon.house { color: var(--green-dark); }
+.recent-icon.purchase { color: #9A7723; }
+
+.composer,
+.task-composer-row {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 6px 20px rgba(32,48,58,.045);
+}
+.shopping-composer { border-radius: 16px; }
+.shopping-composer .qty-input { border-color: var(--line); }
+
+.add-button,
+.task-composer-row b {
+  background: var(--lavender);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(138,118,197,.20);
+}
+.task-composer-row { color: #8B9397; }
+
+.filter-row { gap: 8px; }
+.chip {
+  background: var(--ink-soft);
+  color: #667176;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.chip.active {
+  background: var(--lavender);
+  color: #fff;
+  box-shadow: 0 5px 13px rgba(138,118,197,.17);
+}
+
+.check-button {
+  border-color: #AAB4B8;
+  background: var(--surface);
+}
+.check-button.checked {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.item-title { color: var(--ink); font-weight: 650; }
+.item-menu { color: #899398; }
+
+.badge {
+  border-radius: 999px;
+  font-weight: 700;
+}
+.badge.urgent {
+  background: var(--yellow-soft);
+  color: #80631D;
+}
+.badge.person { color: #6D767A; }
+.badge.person::before { color: var(--lavender); }
+.badge.quantity,
+.badge.category {
+  background: var(--ink-soft);
+  color: #5E6A70;
+}
+.badge.later {
+  background: var(--lavender-soft);
+  color: #67559E;
+}
+.badge.purchase-price {
+  background: var(--yellow-soft);
+  color: #80631D;
+}
+
+.clear-bought-button {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(111,140,121,.18);
+}
+
+.bottom-nav {
+  background: rgba(252,251,248,.96);
+  border-top-color: var(--line);
+}
+.nav-button { color: #8D969A; }
+.nav-button.active {
+  color: var(--lavender);
+  background: transparent;
+}
+.nav-button.active .nav-icon {
+  background: var(--lavender-soft);
+  border-radius: 12px;
+}
+.nav-icon { width: 34px; height: 28px; }
+.nav-icon svg { width: 20px; height: 20px; }
+.nav-button small { font-weight: 650; }
+
+.sheet-backdrop { background: rgba(32,48,58,.31); }
+.sheet { background: var(--surface); }
+.sheet-handle { background: #CFD5D7; }
+.switch { background: #CFD5D7; }
+.switch-input:checked + .switch { background: var(--yellow); }
+
+.share-code-card { background: var(--lavender-soft); }
+.avatar {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
+.toast { background: var(--ink); }
+
+.language-switch {
+  background: var(--lavender-soft);
+  border-color: rgba(138,118,197,.12);
+  box-shadow: none;
+}
+.language-switch button { color: #767D81; }
+.language-switch button.active {
+  background: var(--surface);
+  color: var(--lavender);
+  box-shadow: 0 2px 7px rgba(32,48,58,.06);
+}
+
+.shopping-urgent-button {
+  border-color: rgba(229,182,73,.42);
+  background: var(--yellow-soft);
+  color: #87681D;
+}
+.shopping-urgent-button.active {
+  background: var(--yellow);
+  color: #55400E;
+  box-shadow: 0 5px 12px rgba(229,182,73,.18);
+}
+
+.shopping-suggestions,
+.sheet-action {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.shopping-suggestion:active { background: var(--lavender-faint); }
+.sheet-action-icon {
+  background: var(--lavender-soft);
+  color: var(--lavender);
+}
+
+.shopping-category-select,
+.category-filter-control {
+  background: rgba(252,251,248,.88);
+  border-color: var(--line);
+}
+.shopping-category-select select,
+.category-filter-control select {
+  background: var(--background);
+  color: #59656A;
+}
+.shopping-category-header {
+  background: linear-gradient(90deg, var(--background), var(--surface));
+  border-bottom-color: var(--line);
+  color: #58656A;
+}
+.category-count {
+  background: var(--lavender-soft);
+  color: var(--lavender);
+}
+.category-chevron,
+.category-menu-button { color: #7E898E; }
+.category-menu-button { border-left-color: var(--line); }
+
+.house-mode-button { color: #697378; }
+.house-mode-count {
+  background: rgba(138,118,197,.10);
+  color: var(--lavender);
+}
+.house-mode-button.active .house-mode-count { background: var(--lavender-soft); }
+
+.purchase-composer-row b {
+  background: var(--yellow);
+  color: #5B430D;
+  box-shadow: 0 5px 12px rgba(229,182,73,.20);
+}
+.purchase-note { color: var(--muted); }
+.purchase-link-button {
+  background: var(--lavender-soft);
+  border-color: transparent;
+  color: var(--lavender);
+}
+.price-input-wrap > span { color: #7B858A; }
+
+/* CASAMI typographic hierarchy */
+.app-view { color: var(--ink); }
+.section-heading-inline h3,
+.sheet-head h3 { font-weight: 700; }
+.item-title,
+.recent-copy strong,
+.priority-main strong,
+.home-purchase-summary-copy strong { letter-spacing: -.01em; }
+
+/* Wider desktop shell remains calm and warm */
+@media (min-width: 700px) {
+  body { background: #EFEAE3; }
+  .shell {
+    background: var(--background);
+    box-shadow: 0 22px 64px rgba(32,48,58,.12);
+  }
 }

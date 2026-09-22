@@ -1,12 +1,12 @@
 {
-  "name": "Lista di Casa",
-  "short_name": "Casa",
-  "description": "Listes partagées pour la maison.",
+  "name": "CASAMI",
+  "short_name": "CASAMI",
+  "description": "La maison, à deux.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#FAF9FF",
-  "theme_color": "#FAF9FF",
+  "background_color": "#F6F3EE",
+  "theme_color": "#F6F3EE",
   "icons": [
     {
       "src": "icons/icon-192.png",

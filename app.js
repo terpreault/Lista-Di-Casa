@@ -16,7 +16,7 @@
 
   const translations = {
     fr: {
-      "auth.tagline": "À deux, simplement.",
+      "auth.tagline": "La maison, à deux.",
       "auth.subtitle": "Courses et petites choses de la maison, toujours synchronisées.",
       "auth.loginTab": "Connexion",
       "auth.signupTab": "Créer un compte",
@@ -179,7 +179,7 @@
       "recent.house": "Maison"
     },
     uk: {
-      "auth.tagline": "Together, made simple.",
+      "auth.tagline": "Home, together.",
       "auth.subtitle": "Shopping and household tasks, always in sync.",
       "auth.loginTab": "Sign in",
       "auth.signupTab": "Create account",
@@ -373,6 +373,8 @@
   let shoppingCategoryFilter = "all";
   let realtimeChannel = null;
   let toastTimer = null;
+
+  document.title = "CASAMI";
   let newShoppingUrgent = false;
   let newShoppingCategory = "other";
   let shoppingActionItemId = null;
@@ -999,7 +1001,7 @@
   function showPage(page, rerender = true) {
     currentPage = page || "home";
     const labels = {
-      home: "Lista di Casa",
+      home: "CASAMI",
       shopping: t("nav.shopping"),
       house: t("nav.house")
     };
@@ -1007,7 +1009,7 @@
     const pageEl = $(`${currentPage}Page`);
     if (pageEl) pageEl.classList.add("active");
     qsa(".nav-button").forEach(button => button.classList.toggle("active", button.dataset.page === currentPage));
-    if ($("pageTitle")) $("pageTitle").textContent = labels[currentPage] || "Lista di Casa";
+    if ($("pageTitle")) $("pageTitle").textContent = labels[currentPage] || "CASAMI";
     if (rerender && currentPage === "shopping") renderShoppingSuggestions(false);
   }
 

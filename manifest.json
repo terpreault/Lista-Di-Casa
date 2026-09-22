@@ -1,7 +1,7 @@
 {
   "name": "CASAMI",
   "short_name": "CASAMI",
-  "description": "La maison, à deux.",
+  "description": "CASAMI — La maison, à deux.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

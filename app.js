@@ -52,7 +52,11 @@
       "nav.home": "Accueil",
       "nav.shopping": "Courses",
       "nav.house": "Maison",
+      "nav.purchases": "Achats",
+      "nav.profile": "Profil",
       "home.underControl": "Tout est sous contrôle",
+      "home.welcomeLine": "Une maison plus douce, ensemble.",
+      "home.quote": "« Les petites choses font les grands foyers. »",
       "home.itemsToBuy": "articles à acheter",
       "home.tasksToDo": "tâches à faire",
       "home.urgentTasks": "priorités urgentes",
@@ -133,6 +137,16 @@
       "purchase.note": "Note",
       "purchase.notePlaceholder": "Couleur, dimensions, référence…",
       "purchase.link": "Lien",
+      "purchase.photo": "Photo",
+      "purchase.addPhoto": "Ajouter une photo",
+      "purchase.changePhoto": "Changer la photo",
+      "purchase.removePhoto": "Retirer la photo",
+      "purchase.photoHelp": "Facultatif · JPG, PNG, WEBP",
+      "purchase.photoError": "La photo n’a pas pu être enregistrée.",
+      "purchase.photoTooLarge": "La photo est trop volumineuse.",
+      "purchase.private": "Privé",
+      "purchase.privateHelp": "Visible uniquement par moi",
+      "purchase.privateBadge": "Privé",
       "purchase.urgentHelp": "Mettre cet achat en priorité",
       "purchase.options": "Options",
       "purchase.saveLater": "Enregistrer pour plus tard",
@@ -155,6 +169,12 @@
       "share.copyCode": "Copier le code",
       "share.members": "Maison et membres",
       "share.membersLabel": "Membres",
+      "profile.account": "Mon compte",
+      "profile.home": "Maison partagée",
+      "profile.members": "Membres",
+      "profile.share": "Partager / gérer la maison",
+      "profile.language": "Langue",
+      "profile.languageHelp": "Français / English",
       "toast.config": "Connecte d’abord l’app à Supabase dans config.js",
       "toast.loadHomeError": "Impossible de charger la maison.",
       "toast.syncError": "Erreur de synchronisation.",
@@ -215,7 +235,11 @@
       "nav.home": "Home",
       "nav.shopping": "Shopping",
       "nav.house": "House",
+      "nav.purchases": "Purchases",
+      "nav.profile": "Profile",
       "home.underControl": "Everything is under control",
+      "home.welcomeLine": "A calmer home, together.",
+      "home.quote": "“Little things make a home.”",
       "home.itemsToBuy": "items to buy",
       "home.tasksToDo": "tasks to do",
       "home.urgentTasks": "urgent priorities",
@@ -296,6 +320,16 @@
       "purchase.note": "Note",
       "purchase.notePlaceholder": "Colour, dimensions, reference…",
       "purchase.link": "Link",
+      "purchase.photo": "Photo",
+      "purchase.addPhoto": "Add a photo",
+      "purchase.changePhoto": "Change photo",
+      "purchase.removePhoto": "Remove photo",
+      "purchase.photoHelp": "Optional · JPG, PNG, WEBP",
+      "purchase.photoError": "The photo could not be saved.",
+      "purchase.photoTooLarge": "The photo is too large.",
+      "purchase.private": "Private",
+      "purchase.privateHelp": "Visible only to me",
+      "purchase.privateBadge": "Private",
       "purchase.urgentHelp": "Mark this purchase as a priority",
       "purchase.options": "Options",
       "purchase.saveLater": "Save for later",
@@ -318,6 +352,12 @@
       "share.copyCode": "Copy code",
       "share.members": "Home and members",
       "share.membersLabel": "Members",
+      "profile.account": "My account",
+      "profile.home": "Shared home",
+      "profile.members": "Members",
+      "profile.share": "Share / manage home",
+      "profile.language": "Language",
+      "profile.languageHelp": "Français / English",
       "toast.config": "Connect the app to Supabase in config.js first",
       "toast.loadHomeError": "Unable to load your home.",
       "toast.syncError": "Sync error.",
@@ -368,7 +408,7 @@
   let homePurchases = [];
   let houseMode = "tasks";
   let taskFilter = "todo";
-  let homePurchaseFilter = "todo";
+  let homePurchaseFilter = "all";
   let shoppingFilter = "all";
   let shoppingCategoryFilter = "all";
   let realtimeChannel = null;
@@ -381,6 +421,11 @@
   let categoryActionKey = null;
   let categoryEditorReturnTarget = null;
   let homePurchaseActionId = null;
+  let homePurchasePhotoUrls = new Map();
+  let homePurchasePhotoFile = null;
+  let homePurchaseRemovePhoto = false;
+  let homePurchaseEditingPhotoPath = null;
+  let homePurchasePreviewObjectUrl = null;
   const pendingPurchases = new Set();
   const pendingPurchaseTimers = new Map();
   const pendingHomePurchases = new Set();
@@ -621,6 +666,7 @@
       shoppingCategories = [];
       tasks = [];
       homePurchases = [];
+      homePurchasePhotoUrls = new Map();
       setView("auth");
       return;
     }
@@ -702,6 +748,7 @@
     shoppingHistory = historyRes.data || [];
     shoppingCategories = categoriesRes.data || [];
     homePurchases = homePurchasesRes.data || [];
+    await refreshHomePurchasePhotoUrls();
     renderAll();
   }
 
@@ -744,6 +791,130 @@
       .replace(/\s+/g, " ");
   }
 
+
+  function urgentLabel(count) {
+    if (currentLang === "uk") return `${count} urgent`;
+    return `${count} urgent${count > 1 ? "s" : ""}`;
+  }
+
+  function updateHomeUrgentBadge(id, count) {
+    const element = $(id);
+    if (!element) return;
+    element.textContent = urgentLabel(count);
+    element.classList.toggle("hidden", !count);
+  }
+
+  async function refreshHomePurchasePhotoUrls() {
+    homePurchasePhotoUrls = new Map();
+    if (!supabase) return;
+    const items = homePurchases.filter(item => item.photo_path);
+    await Promise.all(items.map(async item => {
+      const { data, error } = await supabase.storage
+        .from("home-purchases")
+        .createSignedUrl(item.photo_path, 60 * 60 * 12);
+      if (!error && data?.signedUrl) homePurchasePhotoUrls.set(item.id, data.signedUrl);
+    }));
+  }
+
+  function clearHomePurchasePreviewObjectUrl() {
+    if (homePurchasePreviewObjectUrl) {
+      URL.revokeObjectURL(homePurchasePreviewObjectUrl);
+      homePurchasePreviewObjectUrl = null;
+    }
+  }
+
+  function renderHomePurchasePhotoEditor(url = "") {
+    const preview = $("homePurchasePhotoPreview");
+    const removeButton = $("homePurchaseRemovePhoto");
+    const label = $("homePurchasePhotoLabel");
+    if (!preview || !removeButton || !label) return;
+
+    if (url) {
+      preview.innerHTML = `<img src="${esc(url)}" alt="" />`;
+      removeButton.classList.remove("hidden");
+      label.textContent = t("purchase.changePhoto");
+    } else {
+      preview.innerHTML = `<span class="purchase-photo-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m5 17 4.5-4 3.2 2.8 2.2-2 4.1 3.2"/></svg></span>`;
+      removeButton.classList.add("hidden");
+      label.textContent = t("purchase.addPhoto");
+    }
+  }
+
+  async function prepareHomePurchasePhoto(file) {
+    if (!file || !String(file.type || "").startsWith("image/")) throw new Error("invalid-photo");
+    if (file.size > 15 * 1024 * 1024) throw new Error("photo-too-large");
+
+    const sourceUrl = URL.createObjectURL(file);
+    try {
+      let image;
+      try {
+        image = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = sourceUrl;
+        });
+      } catch {
+        return file;
+      }
+
+      const maxDimension = 1600;
+      const ratio = Math.min(1, maxDimension / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+      if (ratio === 1 && file.size <= 2.5 * 1024 * 1024 && /image\/(jpeg|png|webp)/i.test(file.type)) return file;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(value => value ? resolve(value) : reject(new Error("photo-convert")), "image/jpeg", .84);
+      });
+      return new File([blob], `casami-${Date.now()}.jpg`, { type: "image/jpeg" });
+    } finally {
+      URL.revokeObjectURL(sourceUrl);
+    }
+  }
+
+  async function uploadHomePurchasePhoto(item, file) {
+    const prepared = await prepareHomePurchasePhoto(file);
+    const oldPath = item.photo_path || null;
+    const uuid = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const ext = prepared.type === "image/png" ? "png" : prepared.type === "image/webp" ? "webp" : "jpg";
+    const path = `${item.household_id}/${item.id}/${uuid}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("home-purchases")
+      .upload(path, prepared, { contentType: prepared.type, upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { error: updateError } = await supabase
+      .from("home_purchases")
+      .update({ photo_path: path, updated_at: new Date().toISOString() })
+      .eq("id", item.id);
+    if (updateError) {
+      await supabase.storage.from("home-purchases").remove([path]);
+      throw updateError;
+    }
+
+    if (oldPath && oldPath !== path) {
+      await supabase.storage.from("home-purchases").remove([oldPath]);
+    }
+    return path;
+  }
+
+  async function removeHomePurchasePhoto(item) {
+    if (!item?.photo_path) return;
+    const oldPath = item.photo_path;
+    const { error: removeError } = await supabase.storage.from("home-purchases").remove([oldPath]);
+    if (removeError) throw removeError;
+    const { error: updateError } = await supabase
+      .from("home_purchases")
+      .update({ photo_path: null, updated_at: new Date().toISOString() })
+      .eq("id", item.id);
+    if (updateError) throw updateError;
+  }
+
   function renderAll() {
     $("greeting").textContent = currentLang === "uk"
       ? `Hello ${currentName()}!`
@@ -753,6 +924,7 @@
     const activeShopping = shopping.filter(x => !x.is_done && !x.saved_for_later).length;
     const laterShopping = shopping.filter(x => !x.is_done && x.saved_for_later).length;
     const boughtShopping = shopping.filter(x => x.is_done).length;
+    const urgentShopping = shopping.filter(x => !x.is_done && !x.saved_for_later && x.is_urgent).length;
     const todoTasks = tasks.filter(x => !x.is_done);
     const activeHomePurchases = homePurchases.filter(x => x.status === "todo");
     const laterHomePurchases = homePurchases.filter(x => x.status === "later");
@@ -765,9 +937,11 @@
     $("urgentRemaining").textContent = urgent;
     $("tasksRemaining").textContent = todoTasks.length;
     $("homePurchaseRemaining").textContent = activeHomePurchases.length;
-    $("homePurchaseUrgent").textContent = urgentPurchases;
-    $("houseTasksTabCount").textContent = todoTasks.length;
-    $("housePurchasesTabCount").textContent = activeHomePurchases.length;
+    updateHomeUrgentBadge("shoppingUrgentHome", urgentShopping);
+    updateHomeUrgentBadge("taskUrgentHome", urgentTasks);
+    updateHomeUrgentBadge("homePurchaseUrgent", urgentPurchases);
+
+    if ($("homePurchaseAllCount")) $("homePurchaseAllCount").textContent = `(${homePurchases.length})`;
     $("homePurchaseTodoCount").textContent = `(${activeHomePurchases.length})`;
     $("homePurchaseLaterCount").textContent = `(${laterHomePurchases.length})`;
     $("homePurchaseBoughtCount").textContent = `(${boughtHomePurchases.length})`;
@@ -775,6 +949,12 @@
     $("shoppingTodoCount").textContent = `(${activeShopping})`;
     $("shoppingLaterCount").textContent = `(${laterShopping})`;
     $("shoppingDoneCount").textContent = `(${boughtShopping})`;
+
+    if ($("profileName")) $("profileName").textContent = currentName();
+    if ($("profileEmail")) $("profileEmail").textContent = user?.email || "";
+    if ($("profileAvatar")) $("profileAvatar").textContent = (currentName() || "C").slice(0, 1).toUpperCase();
+    if ($("profileHouseholdName")) $("profileHouseholdName").textContent = household?.name || t("onboarding.defaultHome");
+    if ($("profileMemberCount")) $("profileMemberCount").textContent = members.length;
 
     renderCategoryControls();
     renderShopping();
@@ -787,7 +967,6 @@
     renderShoppingSuggestions(false);
     updateShoppingActionLabels();
     updateHomePurchaseActionLabels();
-    setHouseMode(houseMode);
   }
 
   function shoppingStatusRank(item) {
@@ -1003,7 +1182,9 @@
     const labels = {
       home: "CASAMI",
       shopping: t("nav.shopping"),
-      house: t("nav.house")
+      house: t("nav.house"),
+      purchases: t("nav.purchases"),
+      profile: t("nav.profile")
     };
     qsa(".page").forEach(p => p.classList.remove("active"));
     const pageEl = $(`${currentPage}Page`);
@@ -1425,14 +1606,8 @@
   }
 
   function setHouseMode(mode) {
-    houseMode = mode === "purchases" ? "purchases" : "tasks";
-    qsa("[data-house-mode]").forEach(button => {
-      const active = button.dataset.houseMode === houseMode;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    $("houseTasksView").classList.toggle("hidden", houseMode !== "tasks");
-    $("housePurchasesView").classList.toggle("hidden", houseMode !== "purchases");
+    if (mode === "purchases") showPage("purchases");
+    else if (mode === "tasks") showPage("house");
   }
 
   function formatPrice(value) {
@@ -1453,7 +1628,7 @@
     const host = $("homePurchaseList");
     if (!host) return;
     let shown = [...homePurchases];
-    shown = shown.filter(item => item.status === homePurchaseFilter);
+    if (homePurchaseFilter !== "all") shown = shown.filter(item => item.status === homePurchaseFilter);
     shown.sort((a, b) =>
       Number(b.is_urgent) - Number(a.is_urgent) ||
       new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
@@ -1470,28 +1645,47 @@
       const checked = bought || pending;
       const link = safeExternalUrl(item.url);
       const statusClass = bought ? "done" : item.status === "later" ? "saved-later" : "";
+      const photoUrl = homePurchasePhotoUrls.get(item.id) || "";
+      const statusText = bought ? t("purchase.bought") : item.status === "later" ? t("purchase.later") : t("purchase.toBuy");
+      const statusTone = bought ? "status-bought" : item.status === "later" ? "status-later-badge" : "status-tobuy";
+
       return `
-        <div class="list-item home-purchase-item ${statusClass} ${pending ? "purchase-pending" : ""}">
-          <button class="check-button ${checked ? "checked" : ""}" data-home-purchase-toggle="${item.id}" aria-label="${esc(t("purchase.bought"))}">${checked ? "✓" : ""}</button>
-          <div class="item-content">
-            <div class="item-title">${esc(item.title)}</div>
-            <div class="item-meta">
-              ${item.is_urgent && !bought ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
-              ${item.status === "later" ? `<span class="badge later">${esc(t("purchase.later"))}</span>` : ""}
-              <span class="badge person">${esc(item.assignee ? memberName(item.assignee) : t("common.anyone"))}</span>
-              ${item.estimated_price !== null && item.estimated_price !== undefined ? `<span class="badge purchase-price">${esc(formatPrice(item.estimated_price))}</span>` : ""}
-            </div>
-            ${item.note ? `<div class="purchase-note">${esc(item.note)}</div>` : ""}
+        <article class="purchase-product-card ${statusClass} ${pending ? "purchase-pending" : ""}">
+          <button class="purchase-product-check check-button ${checked ? "checked" : ""}" data-home-purchase-toggle="${item.id}" aria-label="${esc(t("purchase.bought"))}">${checked ? "✓" : ""}</button>
+          <div class="purchase-product-photo ${photoUrl ? "has-photo" : ""}">
+            ${photoUrl
+              ? `<img src="${esc(photoUrl)}" alt="" loading="lazy" />`
+              : `<svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>`}
           </div>
-          ${link ? `<a class="purchase-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(t("purchase.linkOpen"))}">↗</a>` : ""}
-          <button class="item-menu" data-home-purchase-menu="${item.id}" aria-label="${esc(t("purchase.options"))}">⋮</button>
-        </div>
+          <div class="purchase-product-content">
+            <div class="purchase-product-title-row">
+              <strong>${esc(item.title)}</strong>
+              ${item.is_private ? `<span class="badge private-badge">⌾ ${esc(t("purchase.privateBadge"))}</span>` : ""}
+            </div>
+            ${item.note ? `<small class="purchase-product-note">${esc(item.note)}</small>` : ""}
+            <div class="purchase-product-price">${item.estimated_price !== null && item.estimated_price !== undefined ? esc(formatPrice(item.estimated_price)) : ""}</div>
+            <div class="purchase-product-meta">
+              ${item.is_urgent && !bought ? `<span class="badge urgent">${esc(t("common.urgent"))}</span>` : ""}
+              <span class="badge person">${esc(item.assignee ? memberName(item.assignee) : t("common.anyone"))}</span>
+              <span class="badge purchase-status-badge ${statusTone}">${esc(statusText)}</span>
+            </div>
+          </div>
+          <div class="purchase-product-actions">
+            ${link ? `<a class="purchase-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(t("purchase.linkOpen"))}">↗</a>` : ""}
+            <button class="item-menu" data-home-purchase-menu="${item.id}" aria-label="${esc(t("purchase.options"))}">⋮</button>
+          </div>
+        </article>
       `;
     }).join("");
   }
 
   function openHomePurchaseSheet(item = null) {
     $("homePurchaseForm").reset();
+    clearHomePurchasePreviewObjectUrl();
+    homePurchasePhotoFile = null;
+    homePurchaseRemovePhoto = false;
+    homePurchaseEditingPhotoPath = item?.photo_path || null;
+    $("homePurchasePhotoInput").value = "";
     $("homePurchaseId").value = item?.id || "";
     $("homePurchaseTitle").value = item?.title || "";
     $("homePurchaseAssignee").value = item?.assignee || "";
@@ -1500,6 +1694,14 @@
     $("homePurchaseNote").value = item?.note || "";
     $("homePurchaseUrl").value = item?.url || "";
     $("homePurchaseUrgentToggle").checked = !!item?.is_urgent;
+    $("homePurchasePrivateToggle").checked = !!item?.is_private;
+    if (item?.is_private) {
+      $("homePurchaseAssignee").value = user.id;
+      $("homePurchaseAssignee").disabled = true;
+    } else {
+      $("homePurchaseAssignee").disabled = false;
+    }
+    renderHomePurchasePhotoEditor(item ? (homePurchasePhotoUrls.get(item.id) || "") : "");
     $("homePurchaseSheetTitle").textContent = item ? t("purchase.edit") : t("purchase.new");
     $("homePurchaseSheet").classList.remove("hidden");
     setTimeout(() => $("homePurchaseTitle").focus(), 100);
@@ -1522,16 +1724,20 @@
 
   async function saveHomePurchase(event) {
     event.preventDefault();
+    const submitButton = event.submitter;
     const id = $("homePurchaseId").value;
     const title = $("homePurchaseTitle").value.trim();
     if (!title) return;
+
     const priceValue = $("homePurchasePrice").value.trim();
     const status = $("homePurchaseStatus").value || "todo";
+    const isPrivate = $("homePurchasePrivateToggle").checked;
     const payload = {
       household_id: household.id,
       title,
-      assignee: $("homePurchaseAssignee").value || null,
+      assignee: isPrivate ? user.id : ($("homePurchaseAssignee").value || null),
       is_urgent: $("homePurchaseUrgentToggle").checked,
+      is_private: isPrivate,
       estimated_price: priceValue === "" ? null : Number(priceValue),
       note: $("homePurchaseNote").value.trim() || null,
       url: $("homePurchaseUrl").value.trim() || null,
@@ -1542,16 +1748,42 @@
     };
     if (payload.estimated_price !== null && (!Number.isFinite(payload.estimated_price) || payload.estimated_price < 0)) return;
 
-    let result;
-    if (id) result = await supabase.from("home_purchases").update(payload).eq("id", id);
-    else {
-      payload.created_by = user.id;
-      result = await supabase.from("home_purchases").insert(payload);
+    setLoading(submitButton, true, currentLang === "uk" ? "Saving…" : "Enregistrement…");
+    try {
+      let result;
+      if (id) {
+        result = await supabase.from("home_purchases").update(payload).eq("id", id).select().single();
+      } else {
+        payload.created_by = user.id;
+        result = await supabase.from("home_purchases").insert(payload).select().single();
+      }
+      if (result.error || !result.data) {
+        showToast(t("purchase.saveError"));
+        return;
+      }
+
+      const savedItem = result.data;
+      try {
+        if (homePurchasePhotoFile) {
+          await uploadHomePurchasePhoto(savedItem, homePurchasePhotoFile);
+        } else if (homePurchaseRemovePhoto && savedItem.photo_path) {
+          await removeHomePurchasePhoto(savedItem);
+        }
+      } catch (photoError) {
+        console.error(photoError);
+        showToast(photoError?.message === "photo-too-large" ? t("purchase.photoTooLarge") : t("purchase.photoError"));
+      }
+
+      closeSheets();
+      clearHomePurchasePreviewObjectUrl();
+      homePurchasePhotoFile = null;
+      homePurchaseRemovePhoto = false;
+      homePurchaseEditingPhotoPath = null;
+      if (id) showToast(t("purchase.updated"));
+      await loadAll();
+    } finally {
+      setLoading(submitButton, false);
     }
-    if (result.error) return showToast(t("purchase.saveError"));
-    closeSheets();
-    if (id) showToast(t("purchase.updated"));
-    await loadAll();
   }
 
   async function completeHomePurchaseAfterDelay(id) {
@@ -1640,6 +1872,11 @@
       clearTimeout(pendingHomePurchaseTimers.get(id));
       pendingHomePurchaseTimers.delete(id);
       pendingHomePurchases.delete(id);
+    }
+    const item = homePurchases.find(row => row.id === id);
+    if (item?.photo_path) {
+      const { error: photoDeleteError } = await supabase.storage.from("home-purchases").remove([item.photo_path]);
+      if (photoDeleteError) console.warn(photoDeleteError);
     }
     const { error } = await supabase.from("home_purchases").delete().eq("id", id);
     if (error) return showToast(t("toast.deleteError"));
@@ -1893,6 +2130,33 @@
     }));
 
     $("openHomePurchaseComposer").addEventListener("click", () => openHomePurchaseSheet());
+    $("homePurchasePrivateToggle").addEventListener("change", event => {
+      const isPrivate = event.target.checked;
+      if (isPrivate) $("homePurchaseAssignee").value = user.id;
+      $("homePurchaseAssignee").disabled = isPrivate;
+    });
+    $("homePurchasePhotoPicker").addEventListener("click", () => $("homePurchasePhotoInput").click());
+    $("homePurchasePhotoInput").addEventListener("change", event => {
+      const file = event.target.files?.[0] || null;
+      if (!file) return;
+      if (!String(file.type || "").startsWith("image/") || file.size > 15 * 1024 * 1024) {
+        showToast(t("purchase.photoTooLarge"));
+        event.target.value = "";
+        return;
+      }
+      clearHomePurchasePreviewObjectUrl();
+      homePurchasePhotoFile = file;
+      homePurchaseRemovePhoto = false;
+      homePurchasePreviewObjectUrl = URL.createObjectURL(file);
+      renderHomePurchasePhotoEditor(homePurchasePreviewObjectUrl);
+    });
+    $("homePurchaseRemovePhoto").addEventListener("click", () => {
+      clearHomePurchasePreviewObjectUrl();
+      homePurchasePhotoFile = null;
+      homePurchaseRemovePhoto = !!homePurchaseEditingPhotoPath;
+      $("homePurchasePhotoInput").value = "";
+      renderHomePurchasePhotoEditor("");
+    });
     $("homePurchaseForm").addEventListener("submit", saveHomePurchase);
     $("closeHomePurchaseSheet").addEventListener("click", closeSheets);
     $("homePurchaseSheet").addEventListener("click", event => { if (event.target === $("homePurchaseSheet")) closeSheets(); });
@@ -1914,6 +2178,8 @@
     $("homePurchaseDeleteAction").addEventListener("click", () => deleteHomePurchase(homePurchaseActionId));
 
     $("openHouseholdInfo").addEventListener("click", () => $("shareSheet").classList.remove("hidden"));
+    $("profileShareBtn").addEventListener("click", () => $("shareSheet").classList.remove("hidden"));
+    $("profileLogoutBtn").addEventListener("click", logout);
     $("closeShareSheet").addEventListener("click", closeSheets);
     $("shareSheet").addEventListener("click", event => { if (event.target === $("shareSheet")) closeSheets(); });
     $("copyCodeBtn").addEventListener("click", async () => {

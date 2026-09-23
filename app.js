@@ -33,6 +33,12 @@
       "auth.confirmPassword": "Confirmer le mot de passe",
       "auth.passwordHint": "8 caractères minimum.",
       "auth.saveNewPassword": "Enregistrer le nouveau mot de passe",
+
+      "profile.security": "Sécurité",
+      "profile.securityHelp": "Mot de passe du compte",
+      "profile.changePassword": "Changer le mot de passe",
+      "profile.changePasswordHelp": "Choisis un nouveau mot de passe pour ton compte CASAMI.",
+      "profile.savePassword": "Enregistrer le mot de passe",
       "common.email": "Email",
       "common.password": "Mot de passe",
       "common.firstName": "Prénom",
@@ -204,6 +210,9 @@
       "toast.passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
       "toast.passwordUpdated": "Mot de passe modifié. Tu es connecté à CASAMI.",
       "toast.passwordUpdateError": "Impossible de modifier le mot de passe.",
+
+      "toast.passwordChanged": "Mot de passe modifié avec succès.",
+      "toast.resetRateLimit": "Trop de demandes de réinitialisation. Réessaie un peu plus tard.",
       "toast.accountError": "Création du compte impossible.",
       "toast.verifyEmail": "Compte créé. Vérifie ton email pour confirmer l’inscription.",
       "toast.copied": "Code copié.",
@@ -233,6 +242,12 @@
       "auth.confirmPassword": "Confirm password",
       "auth.passwordHint": "At least 8 characters.",
       "auth.saveNewPassword": "Save new password",
+
+      "profile.security": "Security",
+      "profile.securityHelp": "Account password",
+      "profile.changePassword": "Change password",
+      "profile.changePasswordHelp": "Choose a new password for your CASAMI account.",
+      "profile.savePassword": "Save password",
       "common.email": "Email",
       "common.password": "Password",
       "common.firstName": "First name",
@@ -404,6 +419,9 @@
       "toast.passwordTooShort": "The password must be at least 8 characters long.",
       "toast.passwordUpdated": "Password changed. You’re signed in to CASAMI.",
       "toast.passwordUpdateError": "We couldn’t change the password.",
+
+      "toast.passwordChanged": "Password changed successfully.",
+      "toast.resetRateLimit": "Too many reset requests. Please try again a little later.",
       "toast.accountError": "Unable to create the account.",
       "toast.verifyEmail": "Account created. Check your email to confirm your registration.",
       "toast.copied": "Code copied.",
@@ -728,7 +746,12 @@
 
     if (error) {
       console.error("Password reset email error", error);
-      showToast(t("toast.resetEmailError"));
+      const message = String(error.message || "");
+      if (error.status === 429 || /rate|too many|limit/i.test(message)) {
+        showToast(t("toast.resetRateLimit"));
+      } else {
+        showToast(message || t("toast.resetEmailError"));
+      }
       return;
     }
 
@@ -2161,6 +2184,32 @@
     }
   }
 
+
+  async function changePasswordFromProfile(event) {
+    event.preventDefault();
+    const button = event.submitter;
+    const password = $("profileNewPassword").value;
+    const confirmation = $("profileConfirmPassword").value;
+
+    if (password.length < 8) return showToast(t("toast.passwordTooShort"));
+    if (password !== confirmation) return showToast(t("toast.passwordMismatch"));
+
+    setLoading(button, true, currentLang === "uk" ? "Saving…" : "Enregistrement…");
+    const { data, error } = await supabase.auth.updateUser({ password });
+    setLoading(button, false);
+
+    if (error) {
+      console.error("Profile password update error", error);
+      showToast(error.message || t("toast.passwordUpdateError"));
+      return;
+    }
+
+    user = data.user || user;
+    $("changePasswordForm").reset();
+    $("changePasswordSheet").classList.add("hidden");
+    showToast(t("toast.passwordChanged"));
+  }
+
   async function logout() {
     closeSheets();
     cleanupRealtime();
@@ -2356,6 +2405,16 @@
 
     $("openHouseholdInfo").addEventListener("click", () => $("shareSheet").classList.remove("hidden"));
     $("profileShareBtn").addEventListener("click", () => $("shareSheet").classList.remove("hidden"));
+    $("profileChangePasswordBtn").addEventListener("click", () => {
+      $("changePasswordForm").reset();
+      $("changePasswordSheet").classList.remove("hidden");
+      requestAnimationFrame(() => $("profileNewPassword")?.focus());
+    });
+    $("closeChangePasswordSheet").addEventListener("click", () => $("changePasswordSheet").classList.add("hidden"));
+    $("changePasswordSheet").addEventListener("click", event => {
+      if (event.target === $("changePasswordSheet")) $("changePasswordSheet").classList.add("hidden");
+    });
+    $("changePasswordForm").addEventListener("submit", changePasswordFromProfile);
     $("profileLogoutBtn").addEventListener("click", logout);
     $("closeShareSheet").addEventListener("click", closeSheets);
     $("shareSheet").addEventListener("click", event => { if (event.target === $("shareSheet")) closeSheets(); });

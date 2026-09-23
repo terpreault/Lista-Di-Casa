@@ -315,6 +315,17 @@
           </div>
         </section>
 
+
+        <section class="profile-card card">
+          <div class="profile-language-row">
+            <div>
+              <small data-i18n="profile.security">Sécurité</small>
+              <strong data-i18n="profile.securityHelp">Mot de passe du compte</strong>
+            </div>
+            <button id="profileChangePasswordBtn" class="secondary profile-security-button" type="button" data-i18n="profile.changePassword">Changer le mot de passe</button>
+          </div>
+        </section>
+
         <button id="profileLogoutBtn" class="profile-logout" type="button" data-i18n="common.logout">Se déconnecter</button>
       </div>
 
@@ -338,6 +349,33 @@
 
     </section>
   </main>
+
+
+  <div id="changePasswordSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow" data-i18n="profile.security">Sécurité</p>
+          <h3 data-i18n="profile.changePassword">Changer le mot de passe</h3>
+        </div>
+        <button id="closeChangePasswordSheet" class="icon-button" type="button">×</button>
+      </div>
+      <form id="changePasswordForm" class="form-stack">
+        <p class="form-help" data-i18n="profile.changePasswordHelp">Choisis un nouveau mot de passe pour ton compte CASAMI.</p>
+        <label>
+          <span data-i18n="auth.newPassword">Nouveau mot de passe</span>
+          <input id="profileNewPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <label>
+          <span data-i18n="auth.confirmPassword">Confirmer le mot de passe</span>
+          <input id="profileConfirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <small class="password-hint" data-i18n="auth.passwordHint">8 caractères minimum.</small>
+        <button class="primary" type="submit" data-i18n="profile.savePassword">Enregistrer le mot de passe</button>
+      </form>
+    </section>
+  </div>
 
   <div id="taskSheet" class="sheet-backdrop hidden">
     <section class="sheet">

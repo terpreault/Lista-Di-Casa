@@ -1862,3 +1862,50 @@ textarea:focus {
     font-size: 13px;
   }
 }
+
+
+/* =========================================================
+   CASAMI V8.5 — SPLASH TRANSPARENCY FIX
+   Prevents any rectangular background behind the logo block.
+   ========================================================= */
+
+.casami-splash-content {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 330px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.casami-splash-symbol {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal;
+}
+
+.casami-splash-name,
+.casami-splash-tagline {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.casami-splash-content::before,
+.casami-splash-content::after,
+.casami-splash-symbol::before,
+.casami-splash-symbol::after {
+  content: none !important;
+  display: none !important;
+}

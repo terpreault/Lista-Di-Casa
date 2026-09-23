@@ -1,5 +1,5 @@
-const CACHE = "casami-v8-4-password-security";
-const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./config.js", "./manifest.json", "./assets/casami-symbol.png", "./icons/favicon-32.png", "./icons/apple-touch-icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
+const CACHE = "casami-v8-5-splash-transparent";
+const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./config.js", "./manifest.json", "./assets/casami-symbol.png", "./assets/casami-symbol-splash-transparent-v2.png", "./icons/favicon-32.png", "./icons/apple-touch-icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)));

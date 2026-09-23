@@ -1,4 +1,4 @@
-const CACHE = "casami-v8-2-brand";
+const CACHE = "casami-v8-3-password-recovery";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./config.js", "./manifest.json", "./assets/casami-symbol.png", "./icons/favicon-32.png", "./icons/apple-touch-icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", event => {

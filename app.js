@@ -22,6 +22,17 @@
       "auth.signupTab": "Créer un compte",
       "auth.loginButton": "Se connecter",
       "auth.createAccount": "Créer mon compte",
+      "auth.forgotPassword": "Mot de passe oublié ?",
+      "auth.forgotTitle": "Réinitialiser le mot de passe",
+      "auth.forgotHelp": "Entre ton email. Nous t’enverrons un lien sécurisé pour choisir un nouveau mot de passe.",
+      "auth.sendResetLink": "Envoyer le lien",
+      "auth.backToLogin": "Retour à la connexion",
+      "auth.resetTitle": "Choisir un nouveau mot de passe",
+      "auth.resetHelp": "Choisis un nouveau mot de passe pour ton compte CASAMI.",
+      "auth.newPassword": "Nouveau mot de passe",
+      "auth.confirmPassword": "Confirmer le mot de passe",
+      "auth.passwordHint": "8 caractères minimum.",
+      "auth.saveNewPassword": "Enregistrer le nouveau mot de passe",
       "common.email": "Email",
       "common.password": "Mot de passe",
       "common.firstName": "Prénom",
@@ -187,6 +198,12 @@
       "toast.invalidCode": "Code introuvable ou invalide.",
       "toast.joined": "Vous êtes maintenant connectés à la même maison.",
       "toast.loginError": "Email ou mot de passe incorrect.",
+      "toast.resetEmailSent": "Si ce compte existe, un email de réinitialisation vient d’être envoyé.",
+      "toast.resetEmailError": "Impossible d’envoyer l’email de réinitialisation pour le moment.",
+      "toast.passwordMismatch": "Les deux mots de passe ne correspondent pas.",
+      "toast.passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+      "toast.passwordUpdated": "Mot de passe modifié. Tu es connecté à CASAMI.",
+      "toast.passwordUpdateError": "Impossible de modifier le mot de passe.",
       "toast.accountError": "Création du compte impossible.",
       "toast.verifyEmail": "Compte créé. Vérifie ton email pour confirmer l’inscription.",
       "toast.copied": "Code copié.",
@@ -205,6 +222,17 @@
       "auth.signupTab": "Create account",
       "auth.loginButton": "Sign in",
       "auth.createAccount": "Create my account",
+      "auth.forgotPassword": "Forgot password?",
+      "auth.forgotTitle": "Reset your password",
+      "auth.forgotHelp": "Enter your email. We’ll send you a secure link to choose a new password.",
+      "auth.sendResetLink": "Send reset link",
+      "auth.backToLogin": "Back to sign in",
+      "auth.resetTitle": "Choose a new password",
+      "auth.resetHelp": "Choose a new password for your CASAMI account.",
+      "auth.newPassword": "New password",
+      "auth.confirmPassword": "Confirm password",
+      "auth.passwordHint": "At least 8 characters.",
+      "auth.saveNewPassword": "Save new password",
       "common.email": "Email",
       "common.password": "Password",
       "common.firstName": "First name",
@@ -370,6 +398,12 @@
       "toast.invalidCode": "Code not found or invalid.",
       "toast.joined": "You are now connected to the same home.",
       "toast.loginError": "Incorrect email or password.",
+      "toast.resetEmailSent": "If this account exists, a password reset email has just been sent.",
+      "toast.resetEmailError": "We couldn’t send the password reset email right now.",
+      "toast.passwordMismatch": "The two passwords do not match.",
+      "toast.passwordTooShort": "The password must be at least 8 characters long.",
+      "toast.passwordUpdated": "Password changed. You’re signed in to CASAMI.",
+      "toast.passwordUpdateError": "We couldn’t change the password.",
       "toast.accountError": "Unable to create the account.",
       "toast.verifyEmail": "Account created. Check your email to confirm your registration.",
       "toast.copied": "Code copied.",
@@ -419,6 +453,7 @@
 
   let currentPage = "home";
   let supabase = null;
+  let passwordRecoveryMode = false;
   let user = null;
   let household = null;
   let members = [];
@@ -639,6 +674,95 @@
     }, { passive: false });
   }
 
+  function passwordResetRedirectUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  function recoveryMarkerInUrl() {
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const query = new URLSearchParams(window.location.search);
+    return hash.get("type") === "recovery" || query.get("type") === "recovery";
+  }
+
+  function setAuthPanel(mode = "login") {
+    const forms = {
+      login: $("loginForm"),
+      signup: $("signupForm"),
+      forgot: $("forgotPasswordForm"),
+      reset: $("resetPasswordForm")
+    };
+    Object.entries(forms).forEach(([key, form]) => form?.classList.toggle("hidden", key !== mode));
+
+    const tabs = $("authTabs");
+    if (tabs) tabs.classList.toggle("hidden", mode === "forgot" || mode === "reset");
+
+    if (mode === "login" || mode === "signup") {
+      qsa("[data-auth-tab]").forEach(button => {
+        button.classList.toggle("active", button.dataset.authTab === mode);
+      });
+    }
+
+    if (mode === "reset") {
+      setView("auth");
+      requestAnimationFrame(() => $("newPassword")?.focus());
+    }
+  }
+
+  function enterPasswordRecovery() {
+    passwordRecoveryMode = true;
+    setView("auth");
+    setAuthPanel("reset");
+  }
+
+  async function requestPasswordReset(event) {
+    event.preventDefault();
+    const button = event.submitter;
+    const email = $("forgotPasswordEmail").value.trim();
+    if (!email) return;
+
+    setLoading(button, true, currentLang === "uk" ? "Sending…" : "Envoi…");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: passwordResetRedirectUrl()
+    });
+    setLoading(button, false);
+
+    if (error) {
+      console.error("Password reset email error", error);
+      showToast(t("toast.resetEmailError"));
+      return;
+    }
+
+    showToast(t("toast.resetEmailSent"));
+    setAuthPanel("login");
+  }
+
+  async function saveRecoveredPassword(event) {
+    event.preventDefault();
+    const button = event.submitter;
+    const password = $("newPassword").value;
+    const confirmation = $("confirmPassword").value;
+
+    if (password.length < 8) return showToast(t("toast.passwordTooShort"));
+    if (password !== confirmation) return showToast(t("toast.passwordMismatch"));
+
+    setLoading(button, true, currentLang === "uk" ? "Saving…" : "Enregistrement…");
+    const { data, error } = await supabase.auth.updateUser({ password });
+    setLoading(button, false);
+
+    if (error) {
+      console.error("Password update error", error);
+      showToast(error.message || t("toast.passwordUpdateError"));
+      return;
+    }
+
+    user = data.user || user;
+    passwordRecoveryMode = false;
+    $("resetPasswordForm")?.reset();
+    window.history.replaceState({}, document.title, passwordResetRedirectUrl());
+    showToast(t("toast.passwordUpdated"));
+    await routeForUser();
+  }
+
   async function init() {
     preventZoom();
     applyLanguage();
@@ -659,25 +783,51 @@
       return;
     }
 
+    const recoveryFromUrl = recoveryMarkerInUrl();
+
     supabase = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      const previousUserId = user?.id || null;
+      const nextUser = session?.user || null;
+      user = nextUser;
+
+      if (event === "PASSWORD_RECOVERY") {
+        enterPasswordRecovery();
+        return;
+      }
+
+      if (passwordRecoveryMode) {
+        setView("auth");
+        setAuthPanel("reset");
+        return;
+      }
+
+      if (nextUser?.id === previousUserId) return;
+      window.setTimeout(() => routeForUser(), 0);
     });
 
     const { data } = await supabase.auth.getSession();
     user = data.session?.user || null;
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      const nextUser = session?.user || null;
-      if (nextUser?.id === user?.id) return;
-      user = nextUser;
-      await routeForUser();
-    });
+    if (recoveryFromUrl && user) {
+      enterPasswordRecovery();
+      return;
+    }
 
     await routeForUser();
   }
 
   async function routeForUser() {
     cleanupRealtime();
+
+    if (passwordRecoveryMode) {
+      setView("auth");
+      setAuthPanel("reset");
+      return;
+    }
 
     if (!user) {
       household = null;
@@ -2021,13 +2171,19 @@
     qsa("[data-lang]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
 
     qsa("[data-auth-tab]").forEach(button => button.addEventListener("click", () => {
-      qsa("[data-auth-tab]").forEach(b => b.classList.toggle("active", b === button));
-      $("loginForm").classList.toggle("hidden", button.dataset.authTab !== "login");
-      $("signupForm").classList.toggle("hidden", button.dataset.authTab !== "signup");
+      setAuthPanel(button.dataset.authTab);
     }));
 
+    $("forgotPasswordLink").addEventListener("click", () => {
+      const email = $("loginEmail").value.trim();
+      if (email) $("forgotPasswordEmail").value = email;
+      setAuthPanel("forgot");
+    });
+    $("backToLoginBtn").addEventListener("click", () => setAuthPanel("login"));
     $("loginForm").addEventListener("submit", login);
     $("signupForm").addEventListener("submit", signup);
+    $("forgotPasswordForm").addEventListener("submit", requestPasswordReset);
+    $("resetPasswordForm").addEventListener("submit", saveRecoveredPassword);
     $("createHouseholdBtn").addEventListener("click", createHousehold);
     $("joinHouseholdBtn").addEventListener("click", joinHousehold);
     $("logoutOnboarding").addEventListener("click", logout);

@@ -1798,3 +1798,36 @@ textarea:focus {
     transform: none;
   }
 }
+
+
+/* =========================================================
+   CASAMI V8.3 — Password recovery
+   ========================================================= */
+.auth-help-link {
+  justify-self: end;
+  margin-top: -8px;
+  padding: 0;
+  font-size: 13px;
+}
+.auth-back-link {
+  justify-self: center;
+  font-size: 13px;
+}
+.auth-form-heading {
+  display: grid;
+  gap: 7px;
+  margin: 2px 0 4px;
+}
+.auth-form-heading h3 {
+  color: var(--ink);
+}
+.auth-form-heading p {
+  margin: 0;
+  line-height: 1.45;
+  font-size: 14px;
+}
+.password-hint {
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}

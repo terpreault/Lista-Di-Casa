@@ -48,7 +48,7 @@
       </div>
 
       <div class="card auth-card">
-        <div class="segmented">
+        <div id="authTabs" class="segmented">
           <button class="segment active" data-auth-tab="login" data-i18n="auth.loginTab">Connexion</button>
           <button class="segment" data-auth-tab="signup" data-i18n="auth.signupTab">Créer un compte</button>
         </div>
@@ -56,6 +56,7 @@
         <form id="loginForm" class="form-stack">
           <label><span data-i18n="common.email">Email</span><input id="loginEmail" type="email" autocomplete="email" required /></label>
           <label><span data-i18n="common.password">Mot de passe</span><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required /></label>
+          <button id="forgotPasswordLink" class="text-button auth-help-link" type="button" data-i18n="auth.forgotPassword">Mot de passe oublié ?</button>
           <button class="primary" type="submit" data-i18n="auth.loginButton">Se connecter</button>
         </form>
 
@@ -64,6 +65,27 @@
           <label><span data-i18n="common.email">Email</span><input id="signupEmail" type="email" autocomplete="email" required /></label>
           <label><span data-i18n="common.password">Mot de passe</span><input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
           <button class="primary" type="submit" data-i18n="auth.createAccount">Créer mon compte</button>
+        </form>
+
+        <form id="forgotPasswordForm" class="form-stack hidden">
+          <div class="auth-form-heading">
+            <h3 data-i18n="auth.forgotTitle">Réinitialiser le mot de passe</h3>
+            <p data-i18n="auth.forgotHelp">Entre ton email. Nous t’enverrons un lien sécurisé pour choisir un nouveau mot de passe.</p>
+          </div>
+          <label><span data-i18n="common.email">Email</span><input id="forgotPasswordEmail" type="email" autocomplete="email" required /></label>
+          <button class="primary" type="submit" data-i18n="auth.sendResetLink">Envoyer le lien</button>
+          <button id="backToLoginBtn" class="text-button auth-back-link" type="button" data-i18n="auth.backToLogin">Retour à la connexion</button>
+        </form>
+
+        <form id="resetPasswordForm" class="form-stack hidden">
+          <div class="auth-form-heading">
+            <h3 data-i18n="auth.resetTitle">Choisir un nouveau mot de passe</h3>
+            <p data-i18n="auth.resetHelp">Choisis un nouveau mot de passe pour ton compte CASAMI.</p>
+          </div>
+          <label><span data-i18n="auth.newPassword">Nouveau mot de passe</span><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <label><span data-i18n="auth.confirmPassword">Confirmer le mot de passe</span><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <p class="password-hint" data-i18n="auth.passwordHint">8 caractères minimum.</p>
+          <button class="primary" type="submit" data-i18n="auth.saveNewPassword">Enregistrer le nouveau mot de passe</button>
         </form>
       </div>
     </section>

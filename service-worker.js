@@ -1,4 +1,4 @@
-const CACHE = "casami-v8";
+const CACHE = "casami-v8-1-pop";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./config.js", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", event => {

@@ -396,6 +396,27 @@
   ];
 
   let currentLang = localStorage.getItem("lista_lang") === "uk" ? "uk" : "fr";
+
+  function initCasamiSplash() {
+    const splash = document.getElementById("casamiSplash");
+    if (!splash) return;
+
+    const tagline = document.getElementById("casamiSplashTagline");
+    if (tagline) {
+      tagline.textContent = currentLang === "uk" ? "Home, together." : "La maison, à deux.";
+    }
+
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const visibleFor = reduceMotion ? 950 : 1950;
+
+    window.setTimeout(() => {
+      splash.classList.add("is-hiding");
+      window.setTimeout(() => splash.remove(), 420);
+    }, visibleFor);
+  }
+
+  initCasamiSplash();
+
   let currentPage = "home";
   let supabase = null;
   let user = null;

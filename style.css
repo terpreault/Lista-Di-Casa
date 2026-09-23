@@ -1648,3 +1648,153 @@ textarea:focus {
     box-shadow: 0 24px 68px rgba(35,53,72,.12);
   }
 }
+
+
+/* =========================================================
+   CASAMI V8.2 — APPROVED BRAND INTEGRATION
+   Uses only the user-selected CASAMI logo and app icon.
+   ========================================================= */
+
+.brand-block {
+  text-align: center;
+}
+.brand-logo-large {
+  width: min(56vw, 190px);
+  height: auto;
+  margin: 0 auto 10px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.brand-symbol-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.brand-block h1 {
+  margin: 0;
+  color: var(--ink);
+}
+.brand-tagline {
+  margin: 6px 0 0;
+  color: var(--muted);
+  letter-spacing: .025em;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.header-home-mark {
+  width: 42px;
+  height: 42px;
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--surface);
+}
+.header-casami-symbol {
+  display: block;
+  width: 31px;
+  height: 25px;
+  object-fit: contain;
+}
+
+/* Splash screen — approved direction:
+   Fond Coquille + subtle Lavande Joy / Menthe Vive / Jaune Pêche Doré */
+.casami-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #FFF9F3;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .38s ease, visibility .38s ease;
+}
+.casami-splash.is-hiding {
+  opacity: 0;
+  visibility: hidden;
+}
+.casami-splash-content {
+  position: relative;
+  z-index: 2;
+  width: min(76vw, 330px);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  transform: translateY(-2%);
+}
+.casami-splash-symbol {
+  display: block;
+  width: min(52vw, 205px);
+  height: auto;
+  opacity: 0;
+  transform: translateY(10px) scale(.985);
+  animation: casamiBrandIn .48s cubic-bezier(.22,.75,.25,1) .08s forwards;
+}
+.casami-splash-name {
+  margin-top: 18px;
+  color: #233548;
+  font-size: clamp(34px, 10vw, 47px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .11em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: casamiBrandIn .42s ease .48s forwards;
+}
+.casami-splash-tagline {
+  margin-top: 11px;
+  color: #63717D;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .025em;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: casamiBrandIn .38s ease .80s forwards;
+}
+.casami-splash-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(58px);
+  pointer-events: none;
+}
+.casami-splash-lavender {
+  width: 220px;
+  height: 220px;
+  left: -95px;
+  top: 18%;
+  background: rgba(138,92,255,.22);
+}
+.casami-splash-mint {
+  width: 250px;
+  height: 250px;
+  right: -110px;
+  bottom: 12%;
+  background: rgba(73,192,149,.20);
+}
+.casami-splash-yellow {
+  width: 150px;
+  height: 150px;
+  left: 11%;
+  bottom: -55px;
+  background: rgba(255,200,61,.25);
+}
+@keyframes casamiBrandIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .casami-splash-symbol,
+  .casami-splash-name,
+  .casami-splash-tagline {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

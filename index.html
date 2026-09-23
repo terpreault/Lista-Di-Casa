@@ -11,11 +11,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <div id="casamiSplash" class="casami-splash" aria-hidden="true">
+    <div class="casami-splash-blob casami-splash-lavender"></div>
+    <div class="casami-splash-blob casami-splash-mint"></div>
+    <div class="casami-splash-blob casami-splash-yellow"></div>
+    <div class="casami-splash-content">
+      <img src="assets/casami-symbol.png" class="casami-splash-symbol" alt="" />
+      <div class="casami-splash-name">CASAMI</div>
+      <div id="casamiSplashTagline" class="casami-splash-tagline">La maison, à deux.</div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <main class="shell">
@@ -27,10 +40,10 @@
 
       <div class="brand-block">
         <div class="brand-logo-large" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+          <img src="assets/casami-symbol.png" alt="" class="brand-symbol-image" />
         </div>
-        <p class="eyebrow" data-i18n="auth.tagline">À deux, simplement.</p>
         <h1>CASAMI</h1>
+        <p class="eyebrow brand-tagline" data-i18n="auth.tagline">La maison, à deux.</p>
         <p class="subtitle" data-i18n="auth.subtitle">Courses et petites choses de la maison, toujours synchronisées.</p>
       </div>
 
@@ -93,7 +106,7 @@
     <section id="appView" class="app-view hidden">
       <header class="app-header">
         <button class="header-side-button header-home-mark" data-page-jump="home" data-i18n-aria="nav.home" aria-label="Accueil">
-          <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+          <img src="assets/casami-symbol.png" alt="" class="header-casami-symbol" />
         </button>
         <div class="header-center">
           <h2 id="pageTitle">CASAMI</h2>

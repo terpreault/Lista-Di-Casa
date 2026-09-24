@@ -39,6 +39,15 @@
       "profile.changePassword": "Changer le mot de passe",
       "profile.changePasswordHelp": "Choisis un nouveau mot de passe pour ton compte CASAMI.",
       "profile.savePassword": "Enregistrer le mot de passe",
+      "profile.appearance": "Mon profil",
+      "profile.appearanceHelp": "Couleur et icône",
+      "profile.chooseColor": "Choisir une couleur",
+      "profile.chooseIcon": "Choisir une icône",
+      "profile.sharedQuote": "Phrase d’accueil commune",
+      "profile.sharedQuoteHelp": "Visible et modifiable par vous deux",
+      "profile.sharedQuotePlaceholder": "Votre phrase pour la maison…",
+      "profile.styleSaved": "Profil personnalisé.",
+      "profile.quoteSaved": "Phrase d’accueil mise à jour.",
       "common.email": "Email",
       "common.password": "Mot de passe",
       "common.firstName": "Prénom",
@@ -119,6 +128,7 @@
       "category.deleted": "Catégorie supprimée.",
       "category.expand": "Déplier la catégorie",
       "category.collapse": "Réduire la catégorie",
+      "category.dragHelp": "Maintenez ⋮ puis glissez pour changer l’ordre.",
       "category.fruit_veg": "Fruits & légumes",
       "category.bakery": "Boulangerie",
       "category.fresh": "Produits frais",
@@ -177,6 +187,7 @@
       "purchase.addError": "Impossible d’ajouter cet achat.",
       "purchase.saveError": "Impossible d’enregistrer cet achat.",
       "purchase.linkOpen": "Ouvrir le lien",
+      "purchase.photoCloseHint": "Glissez vers le bas pour fermer",
       "home.housePurchases": "Achats maison",
       "home.housePurchasesToBuy": "à acheter",
       "home.urgentShort": "urgent",
@@ -248,6 +259,15 @@
       "profile.changePassword": "Change password",
       "profile.changePasswordHelp": "Choose a new password for your CASAMI account.",
       "profile.savePassword": "Save password",
+      "profile.appearance": "My profile",
+      "profile.appearanceHelp": "Colour and icon",
+      "profile.chooseColor": "Choose a colour",
+      "profile.chooseIcon": "Choose an icon",
+      "profile.sharedQuote": "Shared welcome phrase",
+      "profile.sharedQuoteHelp": "Visible and editable by both of you",
+      "profile.sharedQuotePlaceholder": "Your phrase for the home…",
+      "profile.styleSaved": "Profile customised.",
+      "profile.quoteSaved": "Welcome phrase updated.",
       "common.email": "Email",
       "common.password": "Password",
       "common.firstName": "First name",
@@ -328,6 +348,7 @@
       "category.deleted": "Category deleted.",
       "category.expand": "Expand category",
       "category.collapse": "Collapse category",
+      "category.dragHelp": "Hold ⋮ then drag to change the order.",
       "category.fruit_veg": "Fruit & Veg",
       "category.bakery": "Bakery",
       "category.fresh": "Chilled & Dairy",
@@ -386,6 +407,7 @@
       "purchase.addError": "Unable to add this purchase.",
       "purchase.saveError": "Unable to save this purchase.",
       "purchase.linkOpen": "Open link",
+      "purchase.photoCloseHint": "Swipe down to close",
       "home.housePurchases": "Home purchases",
       "home.housePurchasesToBuy": "to buy",
       "home.urgentShort": "urgent",
@@ -494,6 +516,9 @@
   let shoppingActionItemId = null;
   let categoryActionKey = null;
   let categoryEditorReturnTarget = null;
+  let categoryPickerTarget = null;
+  let categoryDragJustEnded = false;
+  let profileStyleDraft = { color: "#8A5CFF", icon: "initial" };
   let homePurchaseActionId = null;
   let homePurchasePhotoUrls = new Map();
   let homePurchasePhotoFile = null;
@@ -513,6 +538,35 @@
 
   function t(key) {
     return translations[currentLang]?.[key] ?? translations.fr[key] ?? key;
+  }
+
+  const PROFILE_COLORS = ["#8A5CFF", "#49C095", "#FFC83D", "#A984FF", "#233548"];
+
+  function profileColor(value) {
+    const wanted = String(value || "").toUpperCase();
+    return PROFILE_COLORS.find(color => color.toUpperCase() === wanted) || PROFILE_COLORS[0];
+  }
+
+  function profileIcon(member) {
+    const icon = member?.profile_icon || "initial";
+    return icon === "initial" ? String(member?.display_name || "C").slice(0, 1).toUpperCase() : icon;
+  }
+
+  function currentMember() {
+    return members.find(member => member.id === user?.id) || null;
+  }
+
+  function ensureQuantityValue(select, value) {
+    if (!select) return;
+    const wanted = String(value || "");
+    if (wanted && ![...select.options].some(option => option.value === wanted)) {
+      const option = document.createElement("option");
+      option.value = wanted;
+      option.textContent = wanted;
+      option.dataset.legacyQuantity = "true";
+      select.appendChild(option);
+    }
+    select.value = wanted;
   }
 
   function allShoppingCategories() {
@@ -600,6 +654,10 @@
       fillCategorySelect(editSelect, { selected: wanted, allowAdd: true });
       editSelect.dataset.lastValue = editSelect.value;
     }
+    if ($("shoppingCategoryTriggerLabel")) $("shoppingCategoryTriggerLabel").textContent = categoryDisplay(newShoppingCategory || fallbackCategoryKey());
+    if ($("shoppingCategoryFilterTriggerLabel")) $("shoppingCategoryFilterTriggerLabel").textContent = shoppingCategoryFilter === "all" ? t("shopping.allCategories") : categoryDisplay(shoppingCategoryFilter);
+    if ($("shoppingEditCategoryTriggerLabel") && editSelect) $("shoppingEditCategoryTriggerLabel").textContent = categoryDisplay(editSelect.value || fallbackCategoryKey());
+    if (!$("categoryPickerSheet")?.classList.contains("hidden")) renderCategoryPicker();
   }
 
   function applyLanguage() {
@@ -867,7 +925,7 @@
 
     const { data, error } = await supabase
       .from("household_members")
-      .select("household_id, households(id,name,join_code)")
+      .select("household_id, households(id,name,join_code,shared_quote)")
       .eq("user_id", user.id)
       .limit(1);
 
@@ -894,10 +952,15 @@
   async function loadAll() {
     if (!supabase || !household) return;
 
-    const [membersRes, shoppingRes, tasksRes, historyRes, categoriesRes, homePurchasesRes] = await Promise.all([
+    const [householdRes, membersRes, shoppingRes, tasksRes, historyRes, categoriesRes, homePurchasesRes] = await Promise.all([
+      supabase
+        .from("households")
+        .select("id,name,join_code,shared_quote")
+        .eq("id", household.id)
+        .single(),
       supabase
         .from("household_members")
-        .select("user_id, profiles(id,display_name)")
+        .select("user_id, profiles(id,display_name,profile_icon,profile_color)")
         .eq("household_id", household.id),
       supabase
         .from("shopping_items")
@@ -927,15 +990,18 @@
         .order("created_at", { ascending: false })
     ]);
 
-    if (membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error) {
-      console.error(membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error);
+    if (householdRes.error || membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error) {
+      console.error(householdRes.error || membersRes.error || shoppingRes.error || tasksRes.error || historyRes.error || categoriesRes.error || homePurchasesRes.error);
       showToast(t("toast.syncError"));
       return;
     }
 
+    household = householdRes.data || household;
     members = (membersRes.data || []).map(row => ({
       id: row.user_id,
-      display_name: row.profiles?.display_name || (currentLang === "uk" ? "Member" : "Membre")
+      display_name: row.profiles?.display_name || (currentLang === "uk" ? "Member" : "Membre"),
+      profile_icon: row.profiles?.profile_icon || "initial",
+      profile_color: profileColor(row.profiles?.profile_color)
     }));
     shopping = shoppingRes.data || [];
     tasks = tasksRes.data || [];
@@ -1144,9 +1210,15 @@
     $("shoppingLaterCount").textContent = `(${laterShopping})`;
     $("shoppingDoneCount").textContent = `(${boughtShopping})`;
 
+    const me = currentMember();
     if ($("profileName")) $("profileName").textContent = currentName();
     if ($("profileEmail")) $("profileEmail").textContent = user?.email || "";
-    if ($("profileAvatar")) $("profileAvatar").textContent = (currentName() || "C").slice(0, 1).toUpperCase();
+    if ($("profileAvatar")) {
+      $("profileAvatar").textContent = profileIcon(me || { display_name: currentName() });
+      $("profileAvatar").style.setProperty("--profile-color", profileColor(me?.profile_color));
+    }
+    if ($("sharedHomeQuote")) $("sharedHomeQuote").textContent = household?.shared_quote || t("home.quote");
+    if ($("sharedQuoteInput") && document.activeElement !== $("sharedQuoteInput")) $("sharedQuoteInput").value = household?.shared_quote || t("home.quote").replace(/^«\s*|\s*»$/g, "");
     if ($("profileHouseholdName")) $("profileHouseholdName").textContent = household?.name || t("onboarding.defaultHome");
     if ($("profileMemberCount")) $("profileMemberCount").textContent = members.length;
 
@@ -1158,6 +1230,7 @@
     renderRecent();
     renderMembers();
     renderAssignees();
+    renderProfileStyle();
     renderShoppingSuggestions(false);
     updateShoppingActionLabels();
     updateHomePurchaseActionLabels();
@@ -1227,14 +1300,14 @@
       const meta = categoryMeta(key);
       const isCollapsed = collapsed.has(key);
       return `
-        <section class="shopping-category-group ${isCollapsed ? "collapsed" : ""}">
+        <section class="shopping-category-group ${isCollapsed ? "collapsed" : ""}" data-category-group="${esc(key)}">
           <div class="shopping-category-header">
             <button type="button" class="shopping-category-toggle" data-category-toggle="${esc(key)}" aria-expanded="${isCollapsed ? "false" : "true"}" aria-label="${esc(isCollapsed ? t("category.expand") : t("category.collapse"))}">
               <span class="category-title-wrap"><span class="category-emoji">${esc(meta.emoji || "📦")}</span><strong>${esc(categoryLabel(key))}</strong></span>
               <span class="category-count">${items.length}</span>
               <span class="category-chevron" aria-hidden="true">⌄</span>
             </button>
-            <button type="button" class="category-menu-button" data-category-menu="${esc(key)}" aria-label="${esc(t("category.options"))}">⋮</button>
+            <button type="button" class="category-menu-button category-drag-handle" data-category-menu="${esc(key)}" data-category-drag="${esc(key)}" aria-label="${esc(t("category.options"))}">⋮</button>
           </div>
           <div class="shopping-category-items ${isCollapsed ? "hidden" : ""}">${items.map(renderItem).join("")}</div>
         </section>
@@ -1355,8 +1428,22 @@
 
   function renderMembers() {
     $("membersList").innerHTML = members.map(member => `
-      <div class="member-row"><div class="avatar">${esc((member.display_name || "M")[0].toUpperCase())}</div><strong>${esc(member.display_name)}</strong></div>
+      <div class="member-row"><div class="avatar member-profile-avatar" style="--profile-color:${esc(profileColor(member.profile_color))}">${esc(profileIcon(member))}</div><strong>${esc(member.display_name)}</strong></div>
     `).join("");
+  }
+
+  function renderProfileStyle() {
+    const me = currentMember() || { display_name: currentName(), profile_color: profileStyleDraft.color, profile_icon: profileStyleDraft.icon };
+    profileStyleDraft = { color: profileColor(me.profile_color), icon: me.profile_icon || "initial" };
+    const iconText = profileStyleDraft.icon === "initial" ? String(currentName() || "C").slice(0, 1).toUpperCase() : profileStyleDraft.icon;
+    if ($("profileStylePreview")) {
+      $("profileStylePreview").textContent = iconText;
+      $("profileStylePreview").style.setProperty("--profile-color", profileStyleDraft.color);
+    }
+    const initialChoice = document.querySelector(".profile-initial-choice");
+    if (initialChoice) initialChoice.textContent = String(currentName() || "C").slice(0, 1).toUpperCase();
+    qsa("[data-profile-color]").forEach(button => button.classList.toggle("active", button.dataset.profileColor.toUpperCase() === profileStyleDraft.color.toUpperCase()));
+    qsa("[data-profile-icon]").forEach(button => button.classList.toggle("active", button.dataset.profileIcon === profileStyleDraft.icon));
   }
 
   function renderAssignees() {
@@ -1398,6 +1485,141 @@
     $("deleteTaskBtn").classList.toggle("hidden", !task);
     $("taskSheet").classList.remove("hidden");
     setTimeout(() => $("taskTitle").focus(), 100);
+  }
+
+  function categoryPickerTitleForTarget() {
+    if (categoryPickerTarget === "filter") return t("shopping.filterCategory");
+    return t("shopping.category");
+  }
+
+  function renderCategoryPicker() {
+    const host = $("categoryPickerList");
+    if (!host) return;
+    $("categoryPickerTitle").textContent = categoryPickerTitleForTarget();
+    const selected = categoryPickerTarget === "filter"
+      ? shoppingCategoryFilter
+      : categoryPickerTarget === "edit"
+        ? ($("shoppingEditCategory")?.value || fallbackCategoryKey())
+        : newShoppingCategory;
+    const rows = [];
+    if (categoryPickerTarget === "filter") {
+      rows.push(`<div class="category-picker-row category-picker-all ${selected === "all" ? "selected" : ""}"><button class="category-picker-choice" type="button" data-category-choice="all"><span class="category-picker-icon">✦</span><strong>${esc(t("shopping.allCategories"))}</strong><span class="category-picker-check">${selected === "all" ? "✓" : ""}</span></button></div>`);
+    }
+    rows.push(...allShoppingCategories().map(category => `
+      <div class="category-picker-row ${selected === category.key ? "selected" : ""}" data-category-key="${esc(category.key)}">
+        <button class="category-picker-choice" type="button" data-category-choice="${esc(category.key)}"><span class="category-picker-icon">${esc(category.emoji || "📦")}</span><strong>${esc(categoryLabel(category.key))}</strong><span class="category-picker-check">${selected === category.key ? "✓" : ""}</span></button>
+        <button class="category-picker-drag" type="button" data-category-picker-drag="${esc(category.key)}" aria-label="${esc(t("category.dragHelp"))}">⋮</button>
+      </div>
+    `));
+    host.innerHTML = rows.join("");
+  }
+
+  function openCategoryPicker(target) {
+    categoryPickerTarget = target;
+    renderCategoryPicker();
+    $("categoryPickerSheet").classList.remove("hidden");
+  }
+
+  function closeCategoryPicker() {
+    $("categoryPickerSheet").classList.add("hidden");
+    categoryPickerTarget = null;
+  }
+
+  function selectCategoryFromPicker(key) {
+    if (categoryPickerTarget === "filter") {
+      shoppingCategoryFilter = key || "all";
+      $("shoppingCategoryFilter").value = shoppingCategoryFilter;
+      renderShopping();
+    } else if (categoryPickerTarget === "edit") {
+      const chosen = categoryMeta(key).key;
+      $("shoppingEditCategory").value = chosen;
+      $("shoppingEditCategory").dataset.lastValue = chosen;
+    } else {
+      newShoppingCategory = categoryMeta(key).key;
+      $("shoppingCategory").value = newShoppingCategory;
+    }
+    closeCategoryPicker();
+    renderCategoryControls();
+  }
+
+  async function saveCategoryOrder(visibleKeys) {
+    const keys = visibleKeys.filter(Boolean);
+    if (!keys.length) return;
+    const full = allShoppingCategories().map(category => category.key);
+    const visibleSet = new Set(keys);
+    let index = 0;
+    const merged = full.map(key => visibleSet.has(key) ? keys[index++] : key);
+    const byKey = new Map(allShoppingCategories().map(category => [category.key, category]));
+    const updates = merged.map((key, orderIndex) => {
+      const category = byKey.get(key);
+      if (!category?.id) return Promise.resolve({ error: null });
+      return supabase.from("shopping_categories").update({ sort_order: (orderIndex + 1) * 10, updated_at: new Date().toISOString() }).eq("id", category.id);
+    });
+    const results = await Promise.all(updates);
+    if (results.some(result => result.error)) {
+      showToast(t("toast.updateError"));
+      return;
+    }
+    await loadAll();
+    if (!$("categoryPickerSheet").classList.contains("hidden")) renderCategoryPicker();
+  }
+
+  function bindCategoryDrag(container, handleSelector, rowSelector, keyFromRow) {
+    if (!container) return;
+    container.addEventListener("pointerdown", event => {
+      const handle = event.target.closest(handleSelector);
+      if (!handle || (event.pointerType === "mouse" && event.button !== 0)) return;
+      const row = handle.closest(rowSelector);
+      if (!row) return;
+      const startX = event.clientX;
+      const startY = event.clientY;
+      let active = false;
+      let cancelled = false;
+      const delay = event.pointerType === "mouse" ? 180 : 320;
+      const timer = setTimeout(() => {
+        if (cancelled) return;
+        active = true;
+        row.classList.add("category-dragging");
+        container.classList.add("category-drag-active");
+        try { handle.setPointerCapture(event.pointerId); } catch {}
+        if (navigator.vibrate) navigator.vibrate(18);
+      }, delay);
+
+      const move = moveEvent => {
+        if (!active) {
+          if (Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) > 10) {
+            cancelled = true;
+            clearTimeout(timer);
+          }
+          return;
+        }
+        moveEvent.preventDefault();
+        const hit = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
+        const targetRow = hit?.closest(rowSelector);
+        if (!targetRow || targetRow === row || !container.contains(targetRow)) return;
+        const rect = targetRow.getBoundingClientRect();
+        if (moveEvent.clientY < rect.top + rect.height / 2) container.insertBefore(row, targetRow);
+        else container.insertBefore(row, targetRow.nextSibling);
+      };
+
+      const end = async () => {
+        clearTimeout(timer);
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+        if (!active) return;
+        row.classList.remove("category-dragging");
+        container.classList.remove("category-drag-active");
+        categoryDragJustEnded = true;
+        setTimeout(() => { categoryDragJustEnded = false; }, 350);
+        const keys = [...container.querySelectorAll(rowSelector)].map(keyFromRow).filter(Boolean);
+        await saveCategoryOrder(keys);
+      };
+
+      window.addEventListener("pointermove", move, { passive: false });
+      window.addEventListener("pointerup", end, { once: true });
+      window.addEventListener("pointercancel", end, { once: true });
+    });
   }
 
   function openCategoryActions(key) {
@@ -1474,6 +1696,10 @@
       $("shoppingEditCategory").value = createdKey;
       $("shoppingEditCategory").dataset.lastValue = createdKey;
       $("shoppingEditSheet").classList.remove("hidden");
+    } else if (!id && createdKey && target === "filter") {
+      shoppingCategoryFilter = createdKey;
+      renderCategoryControls();
+      renderShopping();
     }
 
     showToast(t(id ? "category.updated" : "category.created"));
@@ -1535,7 +1761,7 @@
     $("shoppingEditForm").reset();
     $("shoppingEditId").value = item.id;
     $("shoppingEditName").value = item.name || "";
-    $("shoppingEditQty").value = item.quantity || "";
+    ensureQuantityValue($("shoppingEditQty"), item.quantity || "");
     fillCategorySelect($("shoppingEditCategory"), { selected: item.category || fallbackCategoryKey(), allowAdd: true });
     $("shoppingEditCategory").dataset.lastValue = item.category || fallbackCategoryKey();
     $("shoppingEditUrgent").checked = !!item.is_urgent;
@@ -1550,6 +1776,7 @@
     $("shoppingEditSheet").classList.add("hidden");
     $("categoryActionsSheet").classList.add("hidden");
     $("categoryEditSheet").classList.add("hidden");
+    $("categoryPickerSheet").classList.add("hidden");
     $("homePurchaseSheet").classList.add("hidden");
     $("homePurchaseActionsSheet").classList.add("hidden");
     $("shareSheet").classList.add("hidden");
@@ -1614,7 +1841,7 @@
     const historyItem = shoppingHistory.find(item => item.id === id);
     if (!historyItem) return;
     $("shoppingName").value = historyItem.display_name || "";
-    $("shoppingQty").value = historyItem.last_quantity || "";
+    ensureQuantityValue($("shoppingQty"), historyItem.last_quantity || "");
     newShoppingCategory = categoryMeta(historyItem.last_category || fallbackCategoryKey()).key;
     renderCategoryControls();
     setNewShoppingUrgent(!!historyItem.last_urgent);
@@ -1846,11 +2073,9 @@
       return `
         <article class="purchase-product-card ${statusClass} ${pending ? "purchase-pending" : ""}">
           <button class="purchase-product-check check-button ${checked ? "checked" : ""}" data-home-purchase-toggle="${item.id}" aria-label="${esc(t("purchase.bought"))}">${checked ? "✓" : ""}</button>
-          <div class="purchase-product-photo ${photoUrl ? "has-photo" : ""}">
-            ${photoUrl
-              ? `<img src="${esc(photoUrl)}" alt="" loading="lazy" />`
-              : `<svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>`}
-          </div>
+          ${photoUrl
+            ? `<button type="button" class="purchase-product-photo has-photo photo-zoom-button" data-photo-view="${esc(item.id)}" aria-label="${esc(t("purchase.photo"))}"><img src="${esc(photoUrl)}" alt="" loading="lazy" /></button>`
+            : `<div class="purchase-product-photo"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></div>`}
           <div class="purchase-product-content">
             <div class="purchase-product-title-row">
               <strong>${esc(item.title)}</strong>
@@ -2079,6 +2304,147 @@
     await loadAll();
   }
 
+  async function saveProfileStyle(partial) {
+    const me = currentMember();
+    profileStyleDraft = {
+      color: profileColor(partial.color || profileStyleDraft.color || me?.profile_color),
+      icon: partial.icon || profileStyleDraft.icon || me?.profile_icon || "initial"
+    };
+    if (me) {
+      me.profile_color = profileStyleDraft.color;
+      me.profile_icon = profileStyleDraft.icon;
+    }
+    renderProfileStyle();
+    const payload = {};
+    if (partial.color) payload.profile_color = profileStyleDraft.color;
+    if (partial.icon) payload.profile_icon = profileStyleDraft.icon;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
+    if (error) {
+      showToast(t("toast.updateError"));
+      await loadAll();
+      return;
+    }
+    await loadAll();
+    showToast(t("profile.styleSaved"));
+  }
+
+  async function saveSharedQuote() {
+    const value = $("sharedQuoteInput").value.trim();
+    if (!value) return;
+    const button = $("saveSharedQuoteBtn");
+    setLoading(button, true, currentLang === "uk" ? "Saving…" : "Enregistrement…");
+    const { error } = await supabase.from("households").update({ shared_quote: value }).eq("id", household.id);
+    setLoading(button, false);
+    if (error) return showToast(t("toast.updateError"));
+    household.shared_quote = value;
+    renderAll();
+    showToast(t("profile.quoteSaved"));
+  }
+
+  function openPhotoViewer(itemId) {
+    const url = homePurchasePhotoUrls.get(itemId);
+    if (!url) return;
+    $("photoViewerImage").src = url;
+    $("photoViewer").classList.remove("hidden");
+    $("photoViewer").setAttribute("aria-hidden", "false");
+  }
+
+  function closePhotoViewer() {
+    $("photoViewer").classList.add("hidden");
+    $("photoViewer").setAttribute("aria-hidden", "true");
+    $("photoViewerImage").src = "";
+    $("photoViewer").style.transform = "";
+    $("photoViewerImage").style.transform = "";
+  }
+
+  function bindPhotoViewerSwipe() {
+    const viewer = $("photoViewer");
+    let startY = 0;
+    let deltaY = 0;
+    viewer.addEventListener("pointerdown", event => {
+      if (event.target.closest("#closePhotoViewer")) return;
+      startY = event.clientY;
+      deltaY = 0;
+      const move = moveEvent => {
+        deltaY = Math.max(0, moveEvent.clientY - startY);
+        if (!deltaY) return;
+        moveEvent.preventDefault();
+        $("photoViewerImage").style.transform = `translateY(${deltaY}px) scale(${Math.max(.88, 1 - deltaY / 1200)})`;
+        viewer.style.background = `rgba(20,25,31,${Math.max(.15, .92 - deltaY / 500)})`;
+      };
+      const end = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+        if (deltaY > 95) closePhotoViewer();
+        else {
+          $("photoViewerImage").style.transform = "";
+          viewer.style.background = "";
+        }
+      };
+      window.addEventListener("pointermove", move, { passive: false });
+      window.addEventListener("pointerup", end, { once: true });
+      window.addEventListener("pointercancel", end, { once: true });
+    });
+  }
+
+  function dismissSheetBackdrop(backdrop) {
+    if (!backdrop || backdrop.classList.contains("hidden")) return;
+    const sheet = backdrop.querySelector(".sheet");
+    if (!sheet) { backdrop.classList.add("hidden"); return; }
+    sheet.classList.add("sheet-dismissing");
+    setTimeout(() => {
+      backdrop.classList.add("hidden");
+      sheet.classList.remove("sheet-dismissing", "sheet-dragging");
+      sheet.style.transform = "";
+      sheet.style.transition = "";
+      sheet.style.opacity = "";
+    }, 170);
+  }
+
+  function bindSwipeSheets() {
+    qsa(".sheet-backdrop").forEach(backdrop => {
+      const sheet = backdrop.querySelector(".sheet");
+      if (!sheet || sheet.dataset.swipeBound === "true") return;
+      sheet.dataset.swipeBound = "true";
+      sheet.addEventListener("pointerdown", event => {
+        if (event.pointerType === "mouse") return;
+        if (sheet.scrollTop > 2) return;
+        const startY = event.clientY;
+        const startX = event.clientX;
+        let deltaY = 0;
+        let dragging = false;
+        const move = moveEvent => {
+          const dy = moveEvent.clientY - startY;
+          const dx = moveEvent.clientX - startX;
+          if (!dragging && (dy < 8 || Math.abs(dx) > Math.abs(dy))) return;
+          dragging = true;
+          deltaY = Math.max(0, dy);
+          moveEvent.preventDefault();
+          sheet.classList.add("sheet-dragging");
+          sheet.style.transform = `translateY(${deltaY}px)`;
+          sheet.style.opacity = String(Math.max(.68, 1 - deltaY / 500));
+        };
+        const end = () => {
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", end);
+          window.removeEventListener("pointercancel", end);
+          if (!dragging) return;
+          if (deltaY > 105) dismissSheetBackdrop(backdrop);
+          else {
+            sheet.style.transition = "transform .18s ease, opacity .18s ease";
+            sheet.style.transform = "translateY(0)";
+            sheet.style.opacity = "1";
+            setTimeout(() => { sheet.classList.remove("sheet-dragging"); sheet.style.transition = ""; sheet.style.transform = ""; sheet.style.opacity = ""; }, 190);
+          }
+        };
+        window.addEventListener("pointermove", move, { passive: false });
+        window.addEventListener("pointerup", end, { once: true });
+        window.addEventListener("pointercancel", end, { once: true });
+      });
+    });
+  }
+
   async function saveTask(event) {
     event.preventDefault();
     const id = $("taskId").value;
@@ -2254,16 +2620,16 @@
     }));
 
     $("shoppingUrgentBtn").addEventListener("click", () => setNewShoppingUrgent(!newShoppingUrgent));
+    $("shoppingCategoryTrigger").addEventListener("click", () => openCategoryPicker("new"));
+    $("shoppingCategoryFilterTrigger").addEventListener("click", () => openCategoryPicker("filter"));
+    $("shoppingEditCategoryTrigger").addEventListener("click", () => openCategoryPicker("edit"));
     $("shoppingCategory").addEventListener("change", event => {
-      if (event.target.value === "__add_category__") {
-        fillCategorySelect(event.target, { selected: newShoppingCategory, allowAdd: true });
-        openCategoryEditor(null, "new");
-        return;
-      }
       newShoppingCategory = categoryMeta(event.target.value).key;
+      renderCategoryControls();
     });
     $("shoppingCategoryFilter").addEventListener("change", event => {
       shoppingCategoryFilter = event.target.value || "all";
+      renderCategoryControls();
       renderShopping();
     });
     $("addShoppingBtn").addEventListener("click", addShopping);
@@ -2291,7 +2657,7 @@
       if (toggle) toggleShopping(toggle.dataset.shoppingToggle);
       if (menu) openShoppingActions(shopping.find(item => item.id === menu.dataset.shoppingMenu));
       if (categoryToggle) toggleCategoryCollapsed(categoryToggle.dataset.categoryToggle);
-      if (categoryMenu) openCategoryActions(categoryMenu.dataset.categoryMenu);
+      if (categoryMenu && !categoryDragJustEnded) openCategoryActions(categoryMenu.dataset.categoryMenu);
     });
 
     $("closeShoppingActions").addEventListener("click", closeSheets);
@@ -2302,16 +2668,26 @@
 
     $("shoppingEditForm").addEventListener("submit", saveShoppingEdit);
     $("shoppingEditCategory").addEventListener("change", event => {
-      if (event.target.value === "__add_category__") {
-        const previous = event.target.dataset.lastValue || fallbackCategoryKey();
-        fillCategorySelect(event.target, { selected: previous, allowAdd: true });
-        openCategoryEditor(null, "edit");
-        return;
-      }
       event.target.dataset.lastValue = event.target.value;
+      renderCategoryControls();
     });
     $("closeShoppingEdit").addEventListener("click", closeSheets);
     $("shoppingEditSheet").addEventListener("click", event => { if (event.target === $("shoppingEditSheet")) closeSheets(); });
+
+    $("closeCategoryPicker").addEventListener("click", closeCategoryPicker);
+    $("categoryPickerSheet").addEventListener("click", event => { if (event.target === $("categoryPickerSheet")) closeCategoryPicker(); });
+    $("categoryPickerList").addEventListener("click", event => {
+      if (categoryDragJustEnded) return;
+      const choice = event.target.closest("[data-category-choice]");
+      if (choice) selectCategoryFromPicker(choice.dataset.categoryChoice);
+    });
+    $("categoryPickerAdd").addEventListener("click", () => {
+      const target = categoryPickerTarget || "new";
+      $("categoryPickerSheet").classList.add("hidden");
+      openCategoryEditor(null, target);
+    });
+    bindCategoryDrag($("categoryPickerList"), "[data-category-picker-drag]", ".category-picker-row[data-category-key]", row => row.dataset.categoryKey);
+    bindCategoryDrag($("shoppingList"), "[data-category-drag]", ".shopping-category-group[data-category-group]", row => row.dataset.categoryGroup);
 
     $("closeCategoryActions").addEventListener("click", closeSheets);
     $("categoryActionsSheet").addEventListener("click", event => { if (event.target === $("categoryActionsSheet")) closeSheets(); });
@@ -2389,7 +2765,9 @@
     $("homePurchaseList").addEventListener("click", event => {
       const toggle = event.target.closest("[data-home-purchase-toggle]");
       const menu = event.target.closest("[data-home-purchase-menu]");
+      const photo = event.target.closest("[data-photo-view]");
       if (toggle) toggleHomePurchase(toggle.dataset.homePurchaseToggle);
+      if (photo) openPhotoViewer(photo.dataset.photoView);
       if (menu) openHomePurchaseActions(homePurchases.find(item => item.id === menu.dataset.homePurchaseMenu));
     });
     $("closeHomePurchaseActions").addEventListener("click", closeSheets);
@@ -2415,6 +2793,20 @@
       if (event.target === $("changePasswordSheet")) $("changePasswordSheet").classList.add("hidden");
     });
     $("changePasswordForm").addEventListener("submit", changePasswordFromProfile);
+    $("profileColorChoices").addEventListener("click", event => {
+      const choice = event.target.closest("[data-profile-color]");
+      if (choice) saveProfileStyle({ color: choice.dataset.profileColor });
+    });
+    $("profileIconChoices").addEventListener("click", event => {
+      const choice = event.target.closest("[data-profile-icon]");
+      if (choice) saveProfileStyle({ icon: choice.dataset.profileIcon });
+    });
+    $("saveSharedQuoteBtn").addEventListener("click", saveSharedQuote);
+    $("sharedQuoteInput").addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); saveSharedQuote(); } });
+    $("closePhotoViewer").addEventListener("click", closePhotoViewer);
+    $("photoViewer").addEventListener("click", event => { if (event.target === $("photoViewer")) closePhotoViewer(); });
+    bindPhotoViewerSwipe();
+    bindSwipeSheets();
     $("profileLogoutBtn").addEventListener("click", logout);
     $("closeShareSheet").addEventListener("click", closeSheets);
     $("shareSheet").addEventListener("click", event => { if (event.target === $("shareSheet")) closeSheets(); });

@@ -155,7 +155,7 @@
           <span class="home-quote-icon">
             <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
           </span>
-          <p data-i18n="home.quote">« Les petites choses font les grands foyers. »</p>
+          <p id="sharedHomeQuote" data-i18n="home.quote">« Les petites choses font les grands foyers. »</p>
         </section>
 
         <div class="home-overview-list">
@@ -212,14 +212,15 @@
         <div class="shopping-add-area">
           <div class="composer shopping-composer">
             <input id="shoppingName" type="text" data-i18n-placeholder="shopping.addPlaceholder" placeholder="Ajouter un article…" maxlength="100" autocomplete="off" />
-            <input id="shoppingQty" class="qty-input" type="text" data-i18n-placeholder="shopping.qtyShort" placeholder="Qté" maxlength="20" />
+            <select id="shoppingQty" class="qty-input quantity-select" aria-label="Quantité"><option value="" data-i18n="shopping.qtyShort">Qté</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select>
             <button id="addShoppingBtn" class="add-button" data-i18n-aria="common.add" aria-label="Ajouter">+</button>
           </div>
           <div class="shopping-secondary-options">
-            <label class="shopping-category-select">
+            <div class="shopping-category-select advanced-category-control">
               <span data-i18n="shopping.category">Catégorie</span>
-              <select id="shoppingCategory" aria-label="Catégorie"></select>
-            </label>
+              <select id="shoppingCategory" class="native-category-select" aria-label="Catégorie"></select>
+              <button id="shoppingCategoryTrigger" class="category-select-trigger" type="button"><span id="shoppingCategoryTriggerLabel">📦 Autres</span><span class="category-select-chevron">⌄</span></button>
+            </div>
             <button id="shoppingUrgentBtn" class="shopping-urgent-button" type="button" aria-pressed="false" data-i18n-title="common.urgent" title="Urgent"><b>!</b><span data-i18n="common.urgent">Urgent</span></button>
           </div>
           <div id="shoppingSuggestions" class="shopping-suggestions hidden"></div>
@@ -232,10 +233,11 @@
           <button class="chip status-done" data-shopping-filter="done"><span data-i18n="shopping.bought">Achetés</span> <span id="shoppingDoneCount">0</span></button>
         </div>
 
-        <label class="category-filter-control">
+        <div class="category-filter-control advanced-category-control">
           <span data-i18n="shopping.filterCategory">Filtrer par catégorie</span>
-          <select id="shoppingCategoryFilter"></select>
-        </label>
+          <select id="shoppingCategoryFilter" class="native-category-select"></select>
+          <button id="shoppingCategoryFilterTrigger" class="category-select-trigger filter-trigger" type="button"><span id="shoppingCategoryFilterTriggerLabel">Toutes les catégories</span><span class="category-select-chevron">⌄</span></button>
+        </div>
 
         <div id="shoppingList" class="item-list mock-list grouped-shopping-list"></div>
 
@@ -283,6 +285,43 @@
             <p class="eyebrow" data-i18n="profile.account">Mon compte</p>
             <h3 id="profileName">Silvère</h3>
             <p id="profileEmail"></p>
+          </div>
+        </section>
+
+        <section class="profile-card card profile-style-card">
+          <div class="profile-section-heading">
+            <div><small data-i18n="profile.appearance">Profil</small><strong data-i18n="profile.appearanceHelp">Couleur et icône</strong></div>
+            <div id="profileStylePreview" class="profile-style-preview">S</div>
+          </div>
+          <div class="profile-custom-label" data-i18n="profile.chooseColor">Choisir une couleur</div>
+          <div id="profileColorChoices" class="profile-color-choices" aria-label="Couleur du profil">
+            <button type="button" class="profile-color-choice" data-profile-color="#8A5CFF" style="--choice:#8A5CFF" aria-label="Lavande"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#49C095" style="--choice:#49C095" aria-label="Menthe"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#FFC83D" style="--choice:#FFC83D" aria-label="Jaune"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#A984FF" style="--choice:#A984FF" aria-label="Violet clair"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#233548" style="--choice:#233548" aria-label="Bleu encre"></button>
+          </div>
+          <div class="profile-custom-label" data-i18n="profile.chooseIcon">Choisir une icône</div>
+          <div id="profileIconChoices" class="profile-icon-choices">
+            <button type="button" class="profile-icon-choice" data-profile-icon="initial" aria-label="Initiale"><span class="profile-initial-choice">S</span></button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🏠">🏠</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="☕">☕</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🌿">🌿</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="⭐">⭐</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🌞">🌞</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🐾">🐾</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="💜">💜</button>
+          </div>
+        </section>
+
+        <section class="profile-card card shared-quote-profile-card">
+          <div class="profile-section-heading quote-heading">
+            <div><small data-i18n="profile.sharedQuote">Phrase d’accueil commune</small><strong data-i18n="profile.sharedQuoteHelp">Visible par vous deux</strong></div>
+            <span class="shared-quote-mini-icon">♡</span>
+          </div>
+          <div class="shared-quote-editor">
+            <input id="sharedQuoteInput" type="text" maxlength="100" data-i18n-placeholder="profile.sharedQuotePlaceholder" placeholder="Votre phrase pour la maison…" />
+            <button id="saveSharedQuoteBtn" class="secondary" type="button" data-i18n="common.save">Enregistrer</button>
           </div>
         </section>
 
@@ -482,8 +521,8 @@
       <form id="shoppingEditForm" class="form-stack">
         <input id="shoppingEditId" type="hidden" />
         <label><span data-i18n="shopping.item">Article</span><input id="shoppingEditName" type="text" maxlength="100" required /></label>
-        <label><span data-i18n="shopping.quantity">Quantité</span><input id="shoppingEditQty" type="text" maxlength="20" /></label>
-        <label><span data-i18n="shopping.category">Catégorie</span><select id="shoppingEditCategory"></select></label>
+        <label><span data-i18n="shopping.quantity">Quantité</span><select id="shoppingEditQty" class="quantity-select"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select></label>
+        <div class="form-field-block"><span class="field-label-inline" data-i18n="shopping.category">Catégorie</span><select id="shoppingEditCategory" class="native-category-select"></select><button id="shoppingEditCategoryTrigger" class="category-select-trigger form-category-trigger" type="button"><span id="shoppingEditCategoryTriggerLabel">📦 Autres</span><span class="category-select-chevron">⌄</span></button></div>
         <label class="toggle-line">
           <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="shopping.urgentHelp">Mettre cet article en priorité</small></div>
           <input id="shoppingEditUrgent" type="checkbox" class="switch-input" />
@@ -491,6 +530,16 @@
         </label>
         <button class="primary" type="submit" data-i18n="common.saveChanges">Enregistrer les modifications</button>
       </form>
+    </section>
+  </div>
+
+  <div id="categoryPickerSheet" class="sheet-backdrop hidden">
+    <section class="sheet category-picker-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="shopping.categories">Catégories</p><h3 id="categoryPickerTitle" data-i18n="shopping.category">Catégorie</h3></div><button id="closeCategoryPicker" class="icon-button" type="button">×</button></div>
+      <p class="category-picker-hint" data-i18n="category.dragHelp">Maintenez ⋮ puis glissez pour changer l’ordre.</p>
+      <div id="categoryPickerList" class="category-picker-list"></div>
+      <button id="categoryPickerAdd" class="secondary category-picker-add" type="button">＋ <span data-i18n="shopping.addCategory">Ajouter une catégorie</span></button>
     </section>
   </div>
 
@@ -527,6 +576,12 @@
         <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
       </form>
     </section>
+  </div>
+
+  <div id="photoViewer" class="photo-viewer hidden" aria-hidden="true">
+    <button id="closePhotoViewer" class="photo-viewer-close" type="button" aria-label="Fermer">×</button>
+    <img id="photoViewerImage" src="" alt="" />
+    <div class="photo-viewer-hint" data-i18n="purchase.photoCloseHint">Glissez vers le bas pour fermer</div>
   </div>
 
   <div id="shareSheet" class="sheet-backdrop hidden">

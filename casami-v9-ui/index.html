@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF9F3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CASAMI" />
+  <title>CASAMI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="casamiSplash" class="casami-splash" aria-hidden="true">
+    <div class="casami-splash-blob casami-splash-lavender"></div>
+    <div class="casami-splash-blob casami-splash-mint"></div>
+    <div class="casami-splash-blob casami-splash-yellow"></div>
+    <div class="casami-splash-content">
+      <img src="assets/casami-symbol-splash-transparent-v2.png" class="casami-splash-symbol" alt="" />
+      <div class="casami-splash-name">CASAMI</div>
+      <div id="casamiSplashTagline" class="casami-splash-tagline">La maison, à deux.</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <main class="shell">
+    <section id="authView" class="auth-view">
+      <div class="top-corner-language language-switch" aria-label="Language">
+        <button type="button" data-lang="fr" class="active">FR</button>
+        <button type="button" data-lang="uk">UK</button>
+      </div>
+
+      <div class="brand-block">
+        <div class="brand-logo-large" aria-hidden="true">
+          <img src="assets/casami-symbol.png" alt="" class="brand-symbol-image" />
+        </div>
+        <h1>CASAMI</h1>
+        <p class="eyebrow brand-tagline" data-i18n="auth.tagline">La maison, à deux.</p>
+        <p class="subtitle" data-i18n="auth.subtitle">Courses et petites choses de la maison, toujours synchronisées.</p>
+      </div>
+
+      <div class="card auth-card">
+        <div id="authTabs" class="segmented">
+          <button class="segment active" data-auth-tab="login" data-i18n="auth.loginTab">Connexion</button>
+          <button class="segment" data-auth-tab="signup" data-i18n="auth.signupTab">Créer un compte</button>
+        </div>
+
+        <form id="loginForm" class="form-stack">
+          <label><span data-i18n="common.email">Email</span><input id="loginEmail" type="email" autocomplete="email" required /></label>
+          <label><span data-i18n="common.password">Mot de passe</span><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required /></label>
+          <button id="forgotPasswordLink" class="text-button auth-help-link" type="button" data-i18n="auth.forgotPassword">Mot de passe oublié ?</button>
+          <button class="primary" type="submit" data-i18n="auth.loginButton">Se connecter</button>
+        </form>
+
+        <form id="signupForm" class="form-stack hidden">
+          <label><span data-i18n="common.firstName">Prénom</span><input id="signupName" type="text" autocomplete="name" placeholder="Silvère" required /></label>
+          <label><span data-i18n="common.email">Email</span><input id="signupEmail" type="email" autocomplete="email" required /></label>
+          <label><span data-i18n="common.password">Mot de passe</span><input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
+          <button class="primary" type="submit" data-i18n="auth.createAccount">Créer mon compte</button>
+        </form>
+
+        <form id="forgotPasswordForm" class="form-stack hidden">
+          <div class="auth-form-heading">
+            <h3 data-i18n="auth.forgotTitle">Réinitialiser le mot de passe</h3>
+            <p data-i18n="auth.forgotHelp">Entre ton email. Nous t’enverrons un lien sécurisé pour choisir un nouveau mot de passe.</p>
+          </div>
+          <label><span data-i18n="common.email">Email</span><input id="forgotPasswordEmail" type="email" autocomplete="email" required /></label>
+          <button class="primary" type="submit" data-i18n="auth.sendResetLink">Envoyer le lien</button>
+          <button id="backToLoginBtn" class="text-button auth-back-link" type="button" data-i18n="auth.backToLogin">Retour à la connexion</button>
+        </form>
+
+        <form id="resetPasswordForm" class="form-stack hidden">
+          <div class="auth-form-heading">
+            <h3 data-i18n="auth.resetTitle">Choisir un nouveau mot de passe</h3>
+            <p data-i18n="auth.resetHelp">Choisis un nouveau mot de passe pour ton compte CASAMI.</p>
+          </div>
+          <label><span data-i18n="auth.newPassword">Nouveau mot de passe</span><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <label><span data-i18n="auth.confirmPassword">Confirmer le mot de passe</span><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <p class="password-hint" data-i18n="auth.passwordHint">8 caractères minimum.</p>
+          <button class="primary" type="submit" data-i18n="auth.saveNewPassword">Enregistrer le nouveau mot de passe</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="onboardingView" class="onboarding-view hidden">
+      <header class="simple-header">
+        <div>
+          <p class="eyebrow" data-i18n="onboarding.welcome">Bienvenue</p>
+          <h2 data-i18n="onboarding.title">Votre maison</h2>
+        </div>
+        <div class="header-utility-group">
+          <div class="language-switch" aria-label="Language">
+            <button type="button" data-lang="fr" class="active">FR</button>
+            <button type="button" data-lang="uk">UK</button>
+          </div>
+          <button id="logoutOnboarding" class="icon-button" data-i18n-aria="common.logout" aria-label="Se déconnecter">↗</button>
+        </div>
+      </header>
+
+      <div class="welcome-card lavender">
+        <h3 data-i18n="onboarding.createShared">Créez votre espace partagé</h3>
+        <p data-i18n="onboarding.description">La première personne crée la maison. La seconde la rejoint avec le code généré.</p>
+      </div>
+
+      <div class="card form-stack">
+        <h3 data-i18n="common.create">Créer</h3>
+        <label><span data-i18n="onboarding.spaceName">Nom de l’espace</span><input id="householdName" type="text" value="Notre maison" maxlength="40" /></label>
+        <button id="createHouseholdBtn" class="primary" data-i18n="onboarding.createHome">Créer notre maison</button>
+      </div>
+
+      <div class="or-divider"><span data-i18n="common.or">ou</span></div>
+
+      <div class="card form-stack">
+        <h3 data-i18n="common.join">Rejoindre</h3>
+        <label><span data-i18n="onboarding.sharedCode">Code partagé</span><input id="joinCode" type="text" placeholder="Ex. A1B2C3D4" maxlength="12" autocapitalize="characters" /></label>
+        <button id="joinHouseholdBtn" class="secondary" data-i18n="onboarding.joinHome">Rejoindre la maison</button>
+      </div>
+    </section>
+
+    <section id="appView" class="app-view hidden">
+      <header class="app-header">
+        <button class="header-side-button header-home-mark" data-page-jump="home" data-i18n-aria="nav.home" aria-label="Accueil">
+          <img src="assets/casami-symbol.png" alt="" class="header-casami-symbol" />
+        </button>
+        <div class="header-center">
+          <h2 id="pageTitle">CASAMI</h2>
+          <div class="sync-line"><span id="syncDot"></span><span id="syncText" data-i18n="sync.synced">Synchronisé</span></div>
+        </div>
+        <div class="app-header-actions">
+          <div class="language-switch compact" aria-label="Language">
+            <button type="button" data-lang="fr" class="active">FR</button>
+            <button type="button" data-lang="uk">UK</button>
+          </div>
+          <button id="openHouseholdInfo" class="header-side-button" data-i18n-aria="share.members" aria-label="Maison et membres">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.4A4.6 4.6 0 0 1 8.1 14h1.8a4.6 4.6 0 0 1 4.6 4.6V20"/><path d="M17 7v6M14 10h6"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="homePage" class="page active">
+        <section class="home-welcome">
+          <h3 id="greeting">Bonjour !</h3>
+          <p><span data-i18n="home.welcomeLine">Une maison plus douce, ensemble.</span> ♡</p>
+        </section>
+
+        <section class="home-quote-card">
+          <span class="home-quote-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+          </span>
+          <p id="sharedHomeQuote" data-i18n="home.quote">« Les petites choses font les grands foyers. »</p>
+        </section>
+
+        <div class="home-overview-list">
+          <button class="home-overview-row" type="button" data-go="shopping">
+            <span class="overview-icon overview-shopping">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg>
+            </span>
+            <span class="overview-copy">
+              <strong data-i18n="nav.shopping">Courses</strong>
+              <small><b id="shoppingRemaining">0</b> <span data-i18n="home.itemsToBuy">articles à acheter</span></small>
+            </span>
+            <span id="shoppingUrgentHome" class="overview-urgent hidden">0 urgent</span>
+            <span class="overview-chevron">›</span>
+          </button>
+
+          <button class="home-overview-row" type="button" data-go="house">
+            <span class="overview-icon overview-house">
+              <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="m9 15 2 2 4-5"/></svg>
+            </span>
+            <span class="overview-copy">
+              <strong data-i18n="nav.house">Maison</strong>
+              <small><b id="tasksRemaining">0</b> <span data-i18n="home.tasksToDo">tâches à faire</span></small>
+            </span>
+            <span id="taskUrgentHome" class="overview-urgent hidden">0 urgent</span>
+            <span class="overview-chevron">›</span>
+          </button>
+
+          <button id="homePurchaseSummary" class="home-overview-row" type="button" data-go="purchases">
+            <span class="overview-icon overview-purchases">
+              <svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+            </span>
+            <span class="overview-copy">
+              <strong data-i18n="home.housePurchases">Achats maison</strong>
+              <small><b id="homePurchaseRemaining">0</b> <span data-i18n="home.housePurchasesToBuy">à acheter</span></small>
+            </span>
+            <span id="homePurchaseUrgent" class="overview-urgent hidden">0 urgent</span>
+            <span class="overview-chevron">›</span>
+          </button>
+        </div>
+
+        <section class="recent-section">
+          <div class="section-heading-inline">
+            <h3 data-i18n="home.recent">Derniers ajouts</h3>
+            <button class="text-button" data-go="shopping" data-i18n="common.viewAll">Voir tout</button>
+          </div>
+          <div id="recentList" class="recent-list empty-state compact-empty">Aucun ajout pour le moment.</div>
+        </section>
+
+        <span id="urgentRemaining" class="sr-only">0</span>
+        <div id="priorityList" class="hidden" aria-hidden="true"></div>
+      </div>
+
+      <div id="shoppingPage" class="page">
+        <div class="shopping-add-area">
+          <div class="composer shopping-composer">
+            <input id="shoppingName" type="text" data-i18n-placeholder="shopping.addPlaceholder" placeholder="Ajouter un article…" maxlength="100" autocomplete="off" />
+            <select id="shoppingQty" class="qty-input quantity-select" aria-label="Quantité"><option value="" data-i18n="shopping.qtyShort">Qté</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select>
+            <button id="addShoppingBtn" class="add-button" data-i18n-aria="common.add" aria-label="Ajouter">+</button>
+          </div>
+          <div class="shopping-secondary-options">
+            <div class="shopping-category-select advanced-category-control">
+              <span data-i18n="shopping.category">Catégorie</span>
+              <select id="shoppingCategory" class="native-category-select" aria-label="Catégorie"></select>
+              <button id="shoppingCategoryTrigger" class="category-select-trigger" type="button"><span id="shoppingCategoryTriggerLabel">📦 Autres</span><span class="category-select-chevron">⌄</span></button>
+            </div>
+            <button id="shoppingUrgentBtn" class="shopping-urgent-button" type="button" aria-pressed="false" data-i18n-title="common.urgent" title="Urgent"><b>!</b><span data-i18n="common.urgent">Urgent</span></button>
+          </div>
+          <div id="shoppingSuggestions" class="shopping-suggestions hidden"></div>
+        </div>
+
+        <div class="filter-row four-cols semantic-filters" id="shoppingFilters">
+          <button class="chip status-all active" data-shopping-filter="all"><span data-i18n="common.all">Toutes</span></button>
+          <button class="chip status-active" data-shopping-filter="todo"><span data-i18n="shopping.toBuy">À acheter</span> <span id="shoppingTodoCount">0</span></button>
+          <button class="chip status-later" data-shopping-filter="later"><span data-i18n="shopping.later">Plus tard</span> <span id="shoppingLaterCount">0</span></button>
+          <button class="chip status-done" data-shopping-filter="done"><span data-i18n="shopping.bought">Achetés</span> <span id="shoppingDoneCount">0</span></button>
+        </div>
+
+        <div class="category-filter-control advanced-category-control">
+          <span data-i18n="shopping.filterCategory">Filtrer par catégorie</span>
+          <select id="shoppingCategoryFilter" class="native-category-select"></select>
+          <button id="shoppingCategoryFilterTrigger" class="category-select-trigger filter-trigger" type="button"><span id="shoppingCategoryFilterTriggerLabel">Toutes les catégories</span><span class="category-select-chevron">⌄</span></button>
+        </div>
+
+        <div id="shoppingList" class="item-list mock-list grouped-shopping-list"></div>
+
+        <button id="clearBoughtBtn" class="clear-bought-button">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg>
+          <span data-i18n="shopping.clearBought">Effacer les articles achetés</span>
+        </button>
+        <div id="shoppingCounter" class="sr-only">0 à acheter</div>
+      </div>
+<div id="housePage" class="page">
+        <button id="openTaskComposer" class="task-composer-row">
+          <span data-i18n="house.addTask">Ajouter une tâche…</span>
+          <b>+</b>
+        </button>
+
+        <div class="filter-row three-cols semantic-filters" id="taskFilters">
+          <button class="chip status-all" data-filter="all" data-i18n="common.all">Toutes</button>
+          <button class="chip status-active active" data-filter="todo" data-i18n="house.toDo">À faire</button>
+          <button class="chip status-done" data-filter="done" data-i18n="house.done">Faites</button>
+        </div>
+
+        <div id="taskList" class="item-list mock-list task-mock-list"></div>
+      </div>
+
+      <div id="purchasesPage" class="page">
+        <button id="openHomePurchaseComposer" class="task-composer-row purchase-composer-row">
+          <span data-i18n="purchase.add">Ajouter un achat…</span>
+          <b>+</b>
+        </button>
+
+        <div class="filter-row four-cols semantic-filters" id="homePurchaseFilters">
+          <button class="chip status-all active" data-purchase-filter="all"><span data-i18n="common.all">Toutes</span> <span id="homePurchaseAllCount">0</span></button>
+          <button class="chip status-active" data-purchase-filter="todo"><span data-i18n="purchase.toBuy">À acheter</span> <span id="homePurchaseTodoCount">0</span></button>
+          <button class="chip status-later" data-purchase-filter="later"><span data-i18n="purchase.later">Plus tard</span> <span id="homePurchaseLaterCount">0</span></button>
+          <button class="chip status-done" data-purchase-filter="bought"><span data-i18n="purchase.bought">Achetés</span> <span id="homePurchaseBoughtCount">0</span></button>
+        </div>
+
+        <div id="homePurchaseList" class="purchase-card-list"></div>
+      </div>
+
+      <div id="profilePage" class="page">
+        <section class="profile-hero card">
+          <div id="profileAvatar" class="profile-avatar">S</div>
+          <div class="profile-main">
+            <p class="eyebrow" data-i18n="profile.account">Mon compte</p>
+            <h3 id="profileName">Silvère</h3>
+            <p id="profileEmail"></p>
+          </div>
+        </section>
+
+        <section class="profile-card card profile-style-card">
+          <div class="profile-section-heading">
+            <div><small data-i18n="profile.appearance">Profil</small><strong data-i18n="profile.appearanceHelp">Couleur et icône</strong></div>
+            <div id="profileStylePreview" class="profile-style-preview">S</div>
+          </div>
+          <div class="profile-custom-label" data-i18n="profile.chooseColor">Choisir une couleur</div>
+          <div id="profileColorChoices" class="profile-color-choices" aria-label="Couleur du profil">
+            <button type="button" class="profile-color-choice" data-profile-color="#8A5CFF" style="--choice:#8A5CFF" aria-label="Lavande"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#49C095" style="--choice:#49C095" aria-label="Menthe"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#FFC83D" style="--choice:#FFC83D" aria-label="Jaune"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#A984FF" style="--choice:#A984FF" aria-label="Violet clair"></button>
+            <button type="button" class="profile-color-choice" data-profile-color="#233548" style="--choice:#233548" aria-label="Bleu encre"></button>
+          </div>
+          <div class="profile-custom-label" data-i18n="profile.chooseIcon">Choisir une icône</div>
+          <div id="profileIconChoices" class="profile-icon-choices">
+            <button type="button" class="profile-icon-choice" data-profile-icon="initial" aria-label="Initiale"><span class="profile-initial-choice">S</span></button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🏠">🏠</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="☕">☕</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🌿">🌿</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="⭐">⭐</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🌞">🌞</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="🐾">🐾</button>
+            <button type="button" class="profile-icon-choice" data-profile-icon="💜">💜</button>
+          </div>
+        </section>
+
+        <section class="profile-card card shared-quote-profile-card">
+          <div class="profile-section-heading quote-heading">
+            <div><small data-i18n="profile.sharedQuote">Phrase d’accueil commune</small><strong data-i18n="profile.sharedQuoteHelp">Visible par vous deux</strong></div>
+            <span class="shared-quote-mini-icon">♡</span>
+          </div>
+          <div class="shared-quote-editor">
+            <input id="sharedQuoteInput" type="text" maxlength="100" data-i18n-placeholder="profile.sharedQuotePlaceholder" placeholder="Votre phrase pour la maison…" />
+            <button id="saveSharedQuoteBtn" class="secondary" type="button" data-i18n="common.save">Enregistrer</button>
+          </div>
+        </section>
+
+        <section class="profile-card card">
+          <div class="profile-row">
+            <span class="profile-row-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+            </span>
+            <div><small data-i18n="profile.home">Maison partagée</small><strong id="profileHouseholdName">Notre maison</strong></div>
+          </div>
+          <div class="profile-row">
+            <span class="profile-row-icon">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.4A4.6 4.6 0 0 1 8.1 14h1.8a4.6 4.6 0 0 1 4.6 4.6V20"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 14.5h1.7a3.3 3.3 0 0 1 3.3 3.3V20"/></svg>
+            </span>
+            <div><small data-i18n="profile.members">Membres</small><strong><span id="profileMemberCount">0</span></strong></div>
+          </div>
+          <button id="profileShareBtn" class="secondary profile-action" type="button" data-i18n="profile.share">Partager / gérer la maison</button>
+        </section>
+
+        <section class="profile-card card">
+          <div class="profile-language-row">
+            <div>
+              <small data-i18n="profile.language">Langue</small>
+              <strong data-i18n="profile.languageHelp">Français / English</strong>
+            </div>
+            <div class="language-switch" aria-label="Language">
+              <button type="button" data-lang="fr" class="active">FR</button>
+              <button type="button" data-lang="uk">UK</button>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="profile-card card">
+          <div class="profile-language-row">
+            <div>
+              <small data-i18n="profile.security">Sécurité</small>
+              <strong data-i18n="profile.securityHelp">Mot de passe du compte</strong>
+            </div>
+            <button id="profileChangePasswordBtn" class="secondary profile-security-button" type="button" data-i18n="profile.changePassword">Changer le mot de passe</button>
+          </div>
+        </section>
+
+        <button id="profileLogoutBtn" class="profile-logout" type="button" data-i18n="common.logout">Se déconnecter</button>
+      </div>
+
+      <nav class="bottom-nav five-tabs">
+        <button class="nav-button active" data-page="home">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><small data-i18n="nav.home">Accueil</small>
+        </button>
+        <button class="nav-button" data-page="shopping">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.3 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H7"/></svg></span><small data-i18n="nav.shopping">Courses</small>
+        </button>
+        <button class="nav-button" data-page="house">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2"/><path d="M5.5 9.5V21h13V9.5"/><path d="m9 15 2 2 4-5"/></svg></span><small data-i18n="nav.house">Maison</small>
+        </button>
+        <button class="nav-button" data-page="purchases">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></span><small data-i18n="nav.purchases">Achats</small>
+        </button>
+        <button class="nav-button" data-page="profile">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-1.5A6.5 6.5 0 0 1 11.5 13h1A6.5 6.5 0 0 1 19 19.5V21"/></svg></span><small data-i18n="nav.profile">Profil</small>
+        </button>
+      </nav>
+
+    </section>
+  </main>
+
+
+  <div id="changePasswordSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow" data-i18n="profile.security">Sécurité</p>
+          <h3 data-i18n="profile.changePassword">Changer le mot de passe</h3>
+        </div>
+        <button id="closeChangePasswordSheet" class="icon-button" type="button">×</button>
+      </div>
+      <form id="changePasswordForm" class="form-stack">
+        <p class="form-help" data-i18n="profile.changePasswordHelp">Choisis un nouveau mot de passe pour ton compte CASAMI.</p>
+        <label>
+          <span data-i18n="auth.newPassword">Nouveau mot de passe</span>
+          <input id="profileNewPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <label>
+          <span data-i18n="auth.confirmPassword">Confirmer le mot de passe</span>
+          <input id="profileConfirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <small class="password-hint" data-i18n="auth.passwordHint">8 caractères minimum.</small>
+        <button class="primary" type="submit" data-i18n="profile.savePassword">Enregistrer le mot de passe</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="taskSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 id="taskSheetTitle">Nouvelle tâche</h3><button id="closeTaskSheet" class="icon-button">×</button></div>
+      <form id="taskForm" class="form-stack">
+        <input id="taskId" type="hidden" />
+        <label><span data-i18n="house.taskLabel">À faire</span><input id="taskTitle" type="text" data-i18n-placeholder="house.taskPlaceholder" placeholder="Ex. Changer l’ampoule" maxlength="120" required /></label>
+        <label><span data-i18n="house.assignee">Pour qui ?</span>
+          <select id="taskAssignee"><option value="">N’importe qui</option></select>
+        </label>
+        <label class="toggle-line">
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="house.urgentHelp">Mettre cette tâche en priorité</small></div>
+          <input id="taskUrgent" type="checkbox" class="switch-input" />
+          <span class="switch"></span>
+        </label>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+        <button id="deleteTaskBtn" class="danger-link hidden" type="button" data-i18n="house.deleteTask">Supprimer cette tâche</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="homePurchaseSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 id="homePurchaseSheetTitle" data-i18n="purchase.new">Nouvel achat</h3><button id="closeHomePurchaseSheet" class="icon-button">×</button></div>
+      <form id="homePurchaseForm" class="form-stack">
+        <input id="homePurchaseId" type="hidden" />
+        <label><span data-i18n="purchase.item">Article</span><input id="homePurchaseTitle" type="text" data-i18n-placeholder="purchase.placeholder" placeholder="Ex. Lampe de bureau" maxlength="120" required /></label>
+        <label><span data-i18n="house.assignee">Pour qui ?</span><select id="homePurchaseAssignee"><option value="">N’importe qui</option></select></label>
+        <div class="purchase-form-grid">
+          <label><span data-i18n="purchase.price">Prix estimé</span><div class="price-input-wrap"><span>€</span><input id="homePurchasePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" /></div></label>
+          <label><span data-i18n="purchase.status">Statut</span><select id="homePurchaseStatus"><option value="todo" data-i18n="purchase.toBuy">À acheter</option><option value="later" data-i18n="purchase.later">Plus tard</option><option value="bought" data-i18n="purchase.bought">Acheté</option></select></label>
+        </div>
+        <div class="purchase-photo-field">
+          <span class="field-label" data-i18n="purchase.photo">Photo</span>
+          <button id="homePurchasePhotoPicker" class="purchase-photo-picker" type="button">
+            <span id="homePurchasePhotoPreview" class="purchase-photo-preview">
+              <span class="purchase-photo-placeholder">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m5 17 4.5-4 3.2 2.8 2.2-2 4.1 3.2"/></svg>
+              </span>
+            </span>
+            <span class="purchase-photo-copy">
+              <strong id="homePurchasePhotoLabel" data-i18n="purchase.addPhoto">Ajouter une photo</strong>
+              <small data-i18n="purchase.photoHelp">Facultatif · JPG, PNG, WEBP</small>
+            </span>
+          </button>
+          <input id="homePurchasePhotoInput" class="hidden" type="file" accept="image/*" />
+          <button id="homePurchaseRemovePhoto" class="text-button purchase-remove-photo hidden" type="button" data-i18n="purchase.removePhoto">Retirer la photo</button>
+        </div>
+
+        <label><span data-i18n="purchase.note">Note</span><textarea id="homePurchaseNote" data-i18n-placeholder="purchase.notePlaceholder" placeholder="Couleur, dimensions, référence…" maxlength="500" rows="3"></textarea></label>
+        <label><span data-i18n="purchase.link">Lien</span><input id="homePurchaseUrl" type="url" inputmode="url" placeholder="https://…" maxlength="1000" /></label>
+        <label class="toggle-line">
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="purchase.urgentHelp">Mettre cet achat en priorité</small></div>
+          <input id="homePurchaseUrgentToggle" type="checkbox" class="switch-input" />
+          <span class="switch"></span>
+        </label>
+        <label class="toggle-line private-toggle-line">
+          <div><strong data-i18n="purchase.private">Privé</strong><small data-i18n="purchase.privateHelp">Visible uniquement par moi</small></div>
+          <input id="homePurchasePrivateToggle" type="checkbox" class="switch-input" />
+          <span class="switch private-switch"></span>
+        </label>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="homePurchaseActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="purchase.options">Options</p><h3 id="homePurchaseActionName">Achat</h3></div><button id="closeHomePurchaseActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="homePurchaseEditAction" class="sheet-action" type="button"><span class="sheet-action-icon">✎</span><span data-i18n="common.edit">Modifier</span></button>
+        <button id="homePurchaseLaterAction" class="sheet-action" type="button"><span class="sheet-action-icon">☆</span><span id="homePurchaseLaterActionText" data-i18n="purchase.saveLater">Enregistrer pour plus tard</span></button>
+        <button id="homePurchaseBoughtAction" class="sheet-action" type="button"><span class="sheet-action-icon">✓</span><span id="homePurchaseBoughtActionText" data-i18n="purchase.markBought">Marquer acheté</span></button>
+        <button id="homePurchaseDeleteAction" class="sheet-action danger-action" type="button"><span class="sheet-action-icon">×</span><span data-i18n="common.delete">Supprimer</span></button>
+      </div>
+    </section>
+  </div>
+
+  <div id="shoppingActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="shopping.options">Options</p><h3 id="shoppingActionName">Article</h3></div><button id="closeShoppingActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="shoppingEditAction" class="sheet-action">
+          <span class="sheet-action-icon">✎</span><span data-i18n="common.edit">Modifier</span>
+        </button>
+        <button id="shoppingLaterAction" class="sheet-action">
+          <span class="sheet-action-icon">☆</span><span id="shoppingLaterActionText">Enregistrer pour plus tard</span>
+        </button>
+        <button id="shoppingDeleteAction" class="sheet-action danger-action">
+          <span class="sheet-action-icon">×</span><span data-i18n="common.delete">Supprimer</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="shoppingEditSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 data-i18n="shopping.editItem">Modifier l’article</h3><button id="closeShoppingEdit" class="icon-button">×</button></div>
+      <form id="shoppingEditForm" class="form-stack">
+        <input id="shoppingEditId" type="hidden" />
+        <label><span data-i18n="shopping.item">Article</span><input id="shoppingEditName" type="text" maxlength="100" required /></label>
+        <label><span data-i18n="shopping.quantity">Quantité</span><select id="shoppingEditQty" class="quantity-select"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select></label>
+        <div class="form-field-block"><span class="field-label-inline" data-i18n="shopping.category">Catégorie</span><select id="shoppingEditCategory" class="native-category-select"></select><button id="shoppingEditCategoryTrigger" class="category-select-trigger form-category-trigger" type="button"><span id="shoppingEditCategoryTriggerLabel">📦 Autres</span><span class="category-select-chevron">⌄</span></button></div>
+        <label class="toggle-line">
+          <div><strong data-i18n="common.urgent">Urgent</strong><small data-i18n="shopping.urgentHelp">Mettre cet article en priorité</small></div>
+          <input id="shoppingEditUrgent" type="checkbox" class="switch-input" />
+          <span class="switch"></span>
+        </label>
+        <button class="primary" type="submit" data-i18n="common.saveChanges">Enregistrer les modifications</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="categoryPickerSheet" class="sheet-backdrop hidden">
+    <section class="sheet category-picker-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="shopping.categories">Catégories</p><h3 id="categoryPickerTitle" data-i18n="shopping.category">Catégorie</h3></div><button id="closeCategoryPicker" class="icon-button" type="button">×</button></div>
+      <p class="category-picker-hint" data-i18n="category.dragHelp">Maintenez ⋮ puis glissez pour changer l’ordre.</p>
+      <div id="categoryPickerList" class="category-picker-list"></div>
+      <button id="categoryPickerAdd" class="secondary category-picker-add" type="button">＋ <span data-i18n="shopping.addCategory">Ajouter une catégorie</span></button>
+    </section>
+  </div>
+
+  <div id="categoryActionsSheet" class="sheet-backdrop hidden">
+    <section class="sheet compact-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div><p class="eyebrow" data-i18n="category.options">Options de catégorie</p><h3 id="categoryActionName">Catégorie</h3></div><button id="closeCategoryActions" class="icon-button">×</button></div>
+      <div class="action-list">
+        <button id="categoryEditAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">✎</span><span data-i18n="category.edit">Modifier la catégorie</span>
+        </button>
+        <button id="categoryMoveUpAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">↑</span><span data-i18n="category.moveUp">Monter</span>
+        </button>
+        <button id="categoryMoveDownAction" class="sheet-action" type="button">
+          <span class="sheet-action-icon">↓</span><span data-i18n="category.moveDown">Descendre</span>
+        </button>
+        <button id="categoryDeleteAction" class="sheet-action danger-action" type="button">
+          <span class="sheet-action-icon">×</span><span data-i18n="category.delete">Supprimer la catégorie</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="categoryEditSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 id="categoryEditTitle" data-i18n="shopping.addCategory">Ajouter une catégorie</h3><button id="closeCategoryEdit" class="icon-button">×</button></div>
+      <form id="categoryEditForm" class="form-stack">
+        <input id="categoryEditId" type="hidden" />
+        <label><span data-i18n="category.nameFr">Nom français</span><input id="categoryNameFr" type="text" maxlength="40" required /></label>
+        <label><span data-i18n="category.nameUk">Nom anglais (UK)</span><input id="categoryNameUk" type="text" maxlength="40" required /></label>
+        <label><span data-i18n="category.icon">Icône</span><input id="categoryEmoji" class="emoji-input" type="text" maxlength="16" inputmode="text" placeholder="📦" /></label>
+        <button class="primary" type="submit" data-i18n="common.save">Enregistrer</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="photoViewer" class="photo-viewer hidden" aria-hidden="true">
+    <button id="closePhotoViewer" class="photo-viewer-close" type="button" aria-label="Fermer">×</button>
+    <img id="photoViewerImage" src="" alt="" />
+    <div class="photo-viewer-hint" data-i18n="purchase.photoCloseHint">Glissez vers le bas pour fermer</div>
+  </div>
+
+  <div id="shareSheet" class="sheet-backdrop hidden">
+    <section class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h3 data-i18n="share.title">Votre maison</h3><button id="closeShareSheet" class="icon-button">×</button></div>
+      <div class="share-code-card">
+        <p data-i18n="share.codeHelp">Code à partager avec Deborah</p>
+        <strong id="householdCode">—</strong>
+        <button id="copyCodeBtn" class="secondary" data-i18n="share.copyCode">Copier le code</button>
+      </div>
+      <div class="member-box">
+        <p class="eyebrow" data-i18n="share.membersLabel">Membres</p>
+        <div id="membersList"></div>
+      </div>
+      <button id="logoutBtn" class="danger-link" data-i18n="common.logout">Se déconnecter</button>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
